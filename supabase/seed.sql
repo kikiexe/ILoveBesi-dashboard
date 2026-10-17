@@ -16,7 +16,7 @@ SET
 /* 2. Initial Suppliers */
 INSERT INTO public.suppliers (id, name, phone, address)
 VALUES
-  ('s0000000-0000-0000-0000-000000000001', 'PT Krakatau Baja Makmur', '021-5551234', 'Kawasan Industri Cilegon, Banten')
+  ('b0000000-0000-0000-0000-000000000001', 'PT Krakatau Baja Makmur', '021-5551234', 'Kawasan Industri Cilegon, Banten')
 ON CONFLICT (id) DO UPDATE
 SET
   name = EXCLUDED.name,
