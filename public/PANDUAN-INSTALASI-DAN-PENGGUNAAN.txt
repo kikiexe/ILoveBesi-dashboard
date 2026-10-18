@@ -1,0 +1,192 @@
+================================================================================
+                    PANDUAN INSTALASI DAN PENGGUNAAN
+                 APLIKASI KASIR DESKTOP ILOVEBESI POS
+================================================================================
+
+Terima kasih telah menggunakan sistem kasir ILoveBesi POS, solusi kasir dan
+manajemen inventaris toko besi hollow galvanis berbasis desktop.
+
+Panduan ini berisi informasi lengkap mengenai:
+1. Isi Paket Unduhan (.zip)
+2. Cara Instalasi (Windows, Linux, macOS)
+3. Panduan Penggunaan Harian Kasir (Login, Buka Shift, Pintasan F1 s/d F11, Tutup Shift)
+
+
+================================================================================
+BAGIAN 1: ISI PAKET UNDUHAN (.ZIP)
+================================================================================
+
+Setiap paket unduhan resmi ILoveBesi POS dikemas dalam format arsip .zip yang
+berisi:
+1. File Installer Aplikasi ILoveBesi POS (sesuai sistem operasi Anda).
+2. File teks panduan ini (PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt).
+
+CARA MENGEKSTRAK FILE .ZIP:
+- Windows : Klik kanan file .zip -> pilih "Extract All..." (Ekstrak Semua) -> 
+            pilih folder tujuan -> klik "Extract".
+- macOS   : Klik dua kali file .zip, sistem akan mengekstrak folder secara otomatis.
+- Linux   : Klik kanan file .zip -> pilih "Extract Here" (Ekstrak di sini),
+            atau gunakan perintah terminal: unzip <nama-file>.zip
+
+
+================================================================================
+BAGIAN 2: CARA INSTALASI BERDASARKAN SISTEM OPERASI
+================================================================================
+
+================================================================================
+A. WINDOWS 10 / 11 (64-BIT)
+================================================================================
+File Installer : .exe (NSIS Setup) atau .msi
+
+Langkah Instalasi:
+1. Ekstrak file ILoveBesi-POS-Windows-64bit.zip.
+2. Buka folder hasil ekstrak, lalu klik dua kali file installer (.exe atau .msi).
+3. Ikuti petunjuk di layar hingga proses instalasi selesai.
+
+CARA MELEWATI PERINGATAN WINDOWS DEFENDER SMARTSCREEN:
+Pada instalasi pertama kali, Windows Defender SmartScreen mungkin menampilkan
+jendela biru bertuliskan:
+"Windows protected your PC" (Windows melindungi PC Anda)
+
+Ini adalah perilaku normal Windows untuk aplikasi baru yang belum memiliki sertifikat
+berbayar Microsoft. Cara melewatinya:
+1. Klik tautan teks bergaris bawah "More info" (Info selengkapnya).
+2. Tombol baru "Run anyway" (Tetap jalankan) akan muncul di bagian bawah.
+3. Klik tombol "Run anyway". Aplikasi akan terpasang dan terbuka secara normal.
+
+================================================================================
+B. LINUX (FEDORA, RHEL, UBUNTU, DEBIAN, UNIVERSAL)
+================================================================================
+Paket installer Linux tersedia dalam 3 format:
+- Fedora / RHEL / CentOS : File .rpm
+- Ubuntu / Debian / Mint : File .deb
+- Universal Portable     : File .AppImage
+
+Langkah Instalasi:
+
+1. Paket .RPM (Fedora / RHEL):
+   - Klik kanan file .rpm hasil ekstrak -> pilih "Open With Software Install".
+   - Atau melalui Terminal:
+     sudo dnf install ./ILoveBesi*.rpm
+
+2. Paket .DEB (Ubuntu / Debian):
+   - Klik kanan file .deb hasil ekstrak -> pilih "Open With Software Install".
+   - Atau melalui Terminal:
+     sudo apt install ./ILoveBesi*.deb
+
+3. Paket .AppImage (Universal tanpa instalasi):
+   - Buka Terminal di folder file .AppImage, berikan izin eksekusi:
+     chmod +x ILoveBesi*.AppImage
+   - Jalankan langsung dengan klik dua kali atau via Terminal:
+     ./ILoveBesi*.AppImage
+
+================================================================================
+C. MACOS (APPLE SILICON M1/M2/M3 & INTEL)
+================================================================================
+File Installer : File .dmg (Apple Silicon untuk chip M1/M2/M3/M4 atau Intel)
+
+Langkah Instalasi:
+1. Ekstrak file .zip dan klik dua kali file .dmg yang sesuai dengan prosesor Mac Anda:
+   - Apple Silicon : ILoveBesi-POS-macOS-Apple-Silicon.zip
+   - Intel Mac     : ILoveBesi-POS-macOS-Intel.zip
+2. Jendela pemasangan akan terbuka. Seret ikon "ILoveBesi POS" ke ikon folder "Applications".
+3. Buka folder Applications di Finder.
+
+CARA MELEWATI PERINGATAN MACOS GATEKEEPER:
+Pada pembukaan pertama kali, macOS Gatekeeper mungkin menampilkan pesan:
+"ILoveBesi POS cannot be opened because it is from an unidentified developer"
+
+Cara melewatinya:
+1. Buka folder Applications di Finder.
+2. KLIK KANAN (atau tahan tombol Control lalu klik) pada ikon "ILoveBesi POS".
+3. Pilih opsi "Open" (Buka) dari menu klik kanan.
+4. Jendela konfirmasi akan muncul. Klik tombol "Open".
+5. Selanjutnya aplikasi dapat dibuka langsung secara normal tanpa peringatan lagi.
+
+
+================================================================================
+BAGIAN 3: PANDUAN PENGGUNAAN HARIAN KASIR POS
+================================================================================
+
+Aplikasi Kasir Desktop ILoveBesi dirancang khusus untuk kecepatan kasir toko material
+besi dengan navigasi 100% menggunakan papan ketik (keyboard) tanpa harus menyentuh mouse.
+
+================================================================================
+LANGKAH 1: MASUK AKUN TOKO (LOGIN)
+================================================================================
+Saat aplikasi dibuka pertama kali:
+1. Masukkan Email dan Kata Sandi akun toko Anda yang telah didaftarkan.
+2. Klik tombol "Masuk ke Sistem Toko" atau tekan [Enter].
+3. Setelah berhasil masuk, data katalog barang, harga per ketebalan, dan data pelanggan
+   toko Anda akan langsung tersinkronisasi secara otomatis dan terisolasi dari toko lain.
+
+================================================================================
+LANGKAH 2: BUKA KASIR (SHIFT BARU)
+================================================================================
+Setiap awal sesi kerja atau pergantian petugas kasir:
+1. Jendela dialog "Buka Kasir (Shift Baru)" akan muncul di layar.
+2. Ketik "Nama Kasir Jaga" (contoh: Budi, Agus, Siti).
+3. Masukkan "Uang Kasir Saat Dibuka (Modal Awal)" di laci kasir (contoh: 200000).
+4. Tekan tombol [Enter] untuk membuka sesi kasir.
+5. Layar kasir utama siap digunakan untuk melayani transaksi pembeli.
+
+================================================================================
+LANGKAH 3: TOMBOL PINTASAN TRANSAKSI CEPAT (100% KEYBOARD)
+================================================================================
+Kasir dapat mengoperasikan seluruh transaksi dengan tombol fungsi berikut:
+
+[F1]                : Fokus instan ke kolom Cari Barang.
+                      Ketik nama besi (contoh: hollow 40x40 1.2) atau kode SKU,
+                      gunakan tombol panah atas/bawah untuk memilih barang,
+                      lalu tekan [Enter] untuk memasukkan ke keranjang nota.
+
+[Panah Atas/Bawah]  : Berpindah baris barang di dalam tabel keranjang faktur berjalan.
+
+[F5]                : Hapus baris barang yang sedang dipilih dari keranjang.
+
+[F6]                : Batalkan dan bersihkan seluruh isi nota belanja berjalan.
+
+[F7]                : Bayar & Simpan Transaksi.
+                      Membuka jendela pembayaran nota:
+                      - Tekan [1] untuk TUNAI (masukkan nominal bayar, tekan Enter).
+                      - Tekan [2] untuk QRIS (masukkan nomor referensi, tekan Enter).
+                      - Tekan [3] untuk KREDIT (masukkan DP/Uang Muka, tanggal jatuh tempo,
+                        dan pilih nama pelanggan).
+                      - Tekan [Enter] untuk Simpan & Cetak Faktur atau Surat Jalan.
+
+[F8]                : Pilih Pelanggan atau Tambah Pelanggan Baru.
+                      Wajib diisi jika transaksi bertipe KREDIT (Piutang).
+
+[F9]                : Cek Stok & Daftar Harga Cepat.
+                      Melihat sisa stok fisik di gudang dan harga jual per batang.
+
+[F10]               : Histori Transaksi Hari Ini.
+                      Melihat daftar transaksi yang sudah selesai hari ini serta
+                      fitur Cetak Ulang Faktur Penjualan atau Surat Jalan.
+
+[F11]               : Terima Pembayaran Cicilan Piutang Pelanggan.
+                      Mencatat setoran pembayaran angsuran piutang pelanggan
+                      dengan pembaruan sisa tagihan secara otomatis.
+
+================================================================================
+LANGKAH 4: TUTUP KASIR (AKHIR SHIFT)
+================================================================================
+Saat pergantian shift atau toko tutup di sore/malam hari:
+1. Pastikan tidak ada transaksi belanja yang sedang berjalan di keranjang.
+2. Tekan tombol [Esc] pada keyboard.
+3. Jendela dialog "Tutup Kasir (Rekap Shift)" akan menampilkan rekapitulasi sesi:
+   - 1. Total Penjualan Tunai
+   - 2. Total Penjualan QRIS
+   - 3. Total Penjualan Kredit
+   - 4. Total Akumulasi Penjualan
+4. Periksa kecocokan fisik uang tunai di laci kasir dengan modal awal + penjualan tunai.
+5. Tekan tombol [Enter] untuk menutup sesi shift kasir secara resmi.
+6. Sesi kasir selesai dan siap dilanjutkan oleh kasir shift berikutnya.
+
+================================================================================
+BANTUAN & DUKUNGAN TEKNIS
+================================================================================
+Jika Anda membutuhkan bantuan teknis atau mengalami kendala operasional, hubungi:
+- Portal Web Pemilik Toko : Buka menu Dashboard pada sistem ILoveBesi
+- Pengembang Sistem       : Tim Pengembang ILoveBesi POS
+================================================================================

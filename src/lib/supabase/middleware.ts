@@ -42,7 +42,11 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
     pathname.startsWith("/manifest.webmanifest") ||
-    pathname.startsWith("/icons");
+    pathname.startsWith("/icons") ||
+    pathname.endsWith(".txt") ||
+    pathname.endsWith(".png") ||
+    pathname.endsWith(".svg") ||
+    pathname.endsWith(".ico");
 
   if (!user && !isLoginPage && !isCronPage && !isPublicAsset && !isLandingPage) {
     const url = request.nextUrl.clone();

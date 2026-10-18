@@ -1,482 +1,1129 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-type DetectedOS = "windows" | "linux" | "macos" | "other";
-
-interface ReleaseInfo {
-  version: string;
-  publishedDate: string | null;
+interface OSConfig {
+  label: string;
+  ver: string;
+  btnText: string;
+  btnSub: string;
+  file: string;
 }
 
-const GITHUB_DOWNLOAD_BASE = "https://github.com/kikiexe/ILoveBesi-desktop/releases/latest/download";
+const GITHUB_BASE =
+  "https://github.com/kikiexe/ILoveBesi-desktop/releases/latest/download/";
 
-export default function LandingDownloadPage() {
-  const [detectedOs, setDetectedOs] = useState<DetectedOS>("other");
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [releaseInfo, setReleaseInfo] = useState<ReleaseInfo>({
-    version: "v1.0.3",
-    publishedDate: null,
-  });
+const OS_CONFIGS: Record<"win" | "mac" | "linux", OSConfig> = {
+  win: {
+    label: "Terdeteksi: Windows 64-bit",
+    ver: "v1.0.3 .ZIP",
+    btnText: "Unduh Paket Windows (.zip)",
+    btnSub: "Termasuk installer .exe (NSIS), .msi & panduan instalasi TXT",
+    file: "ILoveBesi-POS-Windows-64bit.zip",
+  },
+  mac: {
+    label: "Terdeteksi: macOS",
+    ver: "v1.0.3 .DMG .ZIP",
+    btnText: "Unduh untuk Apple Silicon (.zip)",
+    btnSub: "Pakai Intel Mac? Pilih di tab macOS",
+    file: "ILoveBesi-POS-macOS-Apple-Silicon.zip",
+  },
+  linux: {
+    label: "Terdeteksi: Linux",
+    ver: "v1.0.3 .AppImage .ZIP",
+    btnText: "Unduh Universal Portable (.zip)",
+    btnSub: "Berisi AppImage & panduan TXT. Paket .deb dan .rpm ada di tab Linux",
+    file: "ILoveBesi-POS-Linux-AppImage.zip",
+  },
+};
+
+interface CartRow {
+  name: string;
+  qty: string;
+  price: string;
+  subtotal: string;
+  val: number;
+}
+
+const DEMO_ROWS: CartRow[] = [
+  {
+    name: "Hollow Galvanis 40x40 1.6mm",
+    qty: "10 BTG",
+    price: "125.000",
+    subtotal: "1.250.000",
+    val: 1250000,
+  },
+  {
+    name: "Plat Strip 25x3mm 6M",
+    qty: "5 BTG",
+    price: "47.000",
+    subtotal: "235.000",
+    val: 235000,
+  },
+];
+
+export default function LandingPage() {
+  const [activeTab, setActiveTab] = useState<"win" | "linux" | "mac">("win");
+  const [detectedOs, setDetectedOs] = useState<"win" | "linux" | "mac">("win");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // POS Demo states
+  const [cartItems, setCartItems] = useState<CartRow[]>([]);
+  const [runningTotal, setRunningTotal] = useState(0);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [paidStatus, setPaidStatus] = useState<string>("");
+
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
+  const animFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    /* Deteksi sistem operasi pengunjung */
-    if (typeof window !== "undefined" && window.navigator) {
-      const ua = window.navigator.userAgent.toLowerCase();
-      if (ua.includes("win")) {
-        setDetectedOs("windows");
-      } else if (ua.includes("mac") || ua.includes("darwin")) {
-        setDetectedOs("macos");
-      } else if (ua.includes("linux") || ua.includes("x11")) {
-        setDetectedOs("linux");
-      }
+    // Detect OS
+    const ua = (navigator.userAgent || "") + " " + (navigator.platform || "");
+    let os: "win" | "linux" | "mac" = "win";
+    if (/Mac/i.test(ua) && !/iPhone|iPad/i.test(ua)) {
+      os = "mac";
+    } else if (/Linux/i.test(ua) && !/Android/i.test(ua)) {
+      os = "linux";
     }
+    setDetectedOs(os);
+    setActiveTab(os);
 
-    /* Periksa status sesi login pemilik toko */
-    const checkSession = async () => {
+    // Check supabase auth
+    const checkAuth = async () => {
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setIsLoggedIn(!!session);
       } catch {
         setIsLoggedIn(false);
       }
     };
-    checkSession();
-
-    /* Ambil metadata versi terbaru dari API GitHub dengan fallback aman */
-    const fetchLatestRelease = async () => {
-      try {
-        const res = await fetch("https://api.github.com/repos/kikiexe/ILoveBesi-desktop/releases/latest", {
-          headers: { Accept: "application/vnd.github.v3+json" },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.tag_name) {
-            setReleaseInfo({
-              version: data.tag_name,
-              publishedDate: data.published_at ? new Date(data.published_at).toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              }) : null,
-            });
-          }
-        }
-      } catch {
-        /* Fallback ke default jika offline atau terkena limit API */
-      }
-    };
-    fetchLatestRelease();
+    checkAuth();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Top Header Navigasi Publik */}
-      <header className="sticky top-0 z-40 border-b border-slate-300 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded bg-blue-900 font-black text-white text-base">
-              IB
-            </div>
-            <div>
-              <span className="text-lg font-bold tracking-tight text-slate-900">ILoveBesi</span>
-              <span className="hidden sm:inline-block ml-2 text-xs font-semibold text-slate-500">
-                Sistem Kasir POS & Manajemen Toko Besi
-              </span>
-            </div>
-          </div>
+  // Demo loop animation
+  useEffect(() => {
+    const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (isReduced) {
+      setCartItems(DEMO_ROWS);
+      setRunningTotal(1485000);
+      setPaidStatus("LUNAS. Nota dicetak.");
+      return;
+    }
 
-          <div className="flex items-center gap-2">
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex h-10 items-center justify-center rounded bg-blue-900 px-4 text-xs font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                Buka Dashboard Toko
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex h-10 items-center justify-center rounded border border-slate-300 bg-white px-4 text-xs font-bold text-slate-900 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                Masuk Dashboard Pemilik
-              </Link>
-            )}
-          </div>
+    const clearAll = () => {
+      timersRef.current.forEach((t) => clearTimeout(t));
+      timersRef.current = [];
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+    };
+
+    const countSmooth = (from: number, to: number, duration: number) => {
+      const startTime = performance.now();
+      const step = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        setRunningTotal(Math.round(from + (to - from) * progress));
+        if (progress < 1) {
+          animFrameRef.current = requestAnimationFrame(step);
+        }
+      };
+      animFrameRef.current = requestAnimationFrame(step);
+    };
+
+    const runSimulation = () => {
+      clearAll();
+      setCartItems([]);
+      setRunningTotal(0);
+      setPaidStatus("");
+      setActiveKey(null);
+
+      // F1 Hit at 700ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setActiveKey("f1");
+          timersRef.current.push(setTimeout(() => setActiveKey(null), 380));
+        }, 700)
+      );
+
+      // Row 1 at 1300ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setCartItems([DEMO_ROWS[0]]);
+          countSmooth(0, DEMO_ROWS[0].val, 600);
+        }, 1300)
+      );
+
+      // Row 2 at 2700ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setCartItems([DEMO_ROWS[0], DEMO_ROWS[1]]);
+          countSmooth(DEMO_ROWS[0].val, DEMO_ROWS[0].val + DEMO_ROWS[1].val, 600);
+        }, 2700)
+      );
+
+      // F8 Hit at 4600ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setActiveKey("f8");
+          timersRef.current.push(setTimeout(() => setActiveKey(null), 380));
+        }, 4600)
+      );
+
+      // F7 Hit at 5600ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setActiveKey("f7");
+          timersRef.current.push(setTimeout(() => setActiveKey(null), 380));
+        }, 5600)
+      );
+
+      // Paid status at 6000ms
+      timersRef.current.push(
+        setTimeout(() => {
+          setPaidStatus("LUNAS. Nota dicetak.");
+        }, 6000)
+      );
+
+      // Loop restart at 9000ms
+      timersRef.current.push(
+        setTimeout(() => {
+          runSimulation();
+        }, 9000)
+      );
+    };
+
+    runSimulation();
+
+    return () => clearAll();
+  }, []);
+
+  const currentOsCfg = OS_CONFIGS[detectedOs];
+
+  return (
+    <div className="landing-scope">
+      {/* External Web Fonts */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      />
+
+      <style jsx global>{`
+        :root {
+          --lp-bg: #fff;
+          --lp-bg2: #f8fafc;
+          --lp-line: #e2e8f0;
+          --lp-line2: #cbd5e1;
+          --lp-ink: #0f172a;
+          --lp-muted: #475569;
+          --lp-faint: #64748b;
+          --lp-accent: #1d4ed8;
+          --lp-accent-h: #1e40af;
+          --lp-sel: #eff6ff;
+          --lp-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+          --lp-mono: 'JetBrains Mono', ui-monospace, monospace;
+        }
+
+        .landing-scope {
+          font-family: var(--lp-sans);
+          background: var(--lp-bg);
+          color: var(--lp-ink);
+          line-height: 1.6;
+          -webkit-font-smoothing: antialiased;
+          overflow-x: hidden;
+          min-height: 100vh;
+        }
+
+        .landing-scope * {
+          box-sizing: border-box;
+        }
+
+        .landing-scope a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .landing-scope .wrap {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 0 1.5rem;
+        }
+
+        .landing-scope :focus-visible {
+          outline: 2px solid var(--lp-accent);
+          outline-offset: 2px;
+        }
+
+        .landing-scope header {
+          border-bottom: 1px solid var(--lp-line);
+        }
+
+        .landing-scope .nav {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 3.75rem;
+        }
+
+        .landing-scope .brand {
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: -0.02em;
+        }
+
+        .landing-scope .brand span {
+          color: var(--lp-accent);
+        }
+
+        .landing-scope .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          font-family: var(--lp-sans);
+          font-size: 0.85rem;
+          font-weight: 700;
+          padding: 0.6rem 1rem;
+          border: 1px solid var(--lp-line2);
+          border-radius: 6px;
+          background: #fff;
+          color: var(--lp-ink);
+          cursor: pointer;
+          text-decoration: none;
+        }
+
+        .landing-scope .btn:hover {
+          background: var(--lp-bg2);
+          border-color: #94a3b8;
+        }
+
+        .landing-scope .btn.solid {
+          background: var(--lp-accent);
+          border-color: transparent;
+          color: #fff;
+        }
+
+        .landing-scope .btn.solid:hover {
+          background: var(--lp-accent-h);
+        }
+
+        .landing-scope .hero {
+          padding: 4.5rem 0 4rem;
+        }
+
+        .landing-scope .hero-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 3.5rem;
+          align-items: center;
+        }
+
+        .landing-scope .tag {
+          display: inline-block;
+          font-family: var(--lp-mono);
+          font-weight: 700;
+          font-size: 0.75rem;
+          color: var(--lp-accent);
+          background: var(--lp-sel);
+          border: 1px solid #bfdbfe;
+          padding: 0.2rem 0.6rem;
+          border-radius: 4px;
+          margin-bottom: 1.2rem;
+        }
+
+        .landing-scope h1 {
+          font-size: clamp(2.3rem, 4.6vw, 3.5rem);
+          font-weight: 800;
+          line-height: 1.08;
+          letter-spacing: -0.03em;
+          margin-bottom: 1.1rem;
+        }
+
+        .landing-scope .lead {
+          font-size: 1.05rem;
+          color: var(--lp-muted);
+          max-width: 30rem;
+          margin-bottom: 1.8rem;
+        }
+
+        .landing-scope .dl {
+          border: 1px solid var(--lp-line2);
+          border-radius: 8px;
+          padding: 1.1rem;
+          max-width: 31rem;
+          background: var(--lp-bg2);
+        }
+
+        .landing-scope .dl-top {
+          display: flex;
+          justify-content: space-between;
+          font-family: var(--lp-mono);
+          font-weight: 500;
+          font-size: 0.72rem;
+          color: var(--lp-faint);
+          margin-bottom: 0.7rem;
+        }
+
+        .landing-scope .dl .btn.solid {
+          width: 100%;
+          justify-content: space-between;
+          padding: 0.85rem 1rem;
+          font-size: 0.95rem;
+          text-align: left;
+        }
+
+        .landing-scope .dl small {
+          display: block;
+          font-weight: 500;
+          font-size: 0.72rem;
+          opacity: 0.85;
+        }
+
+        .landing-scope .dl p {
+          font-size: 0.78rem;
+          color: var(--lp-muted);
+          margin-top: 0.8rem;
+        }
+
+        .landing-scope .dl .alt {
+          margin-top: 0.5rem;
+        }
+
+        .landing-scope .dl .alt a {
+          color: var(--lp-accent);
+          font-weight: 600;
+        }
+
+        .landing-scope .dl .alt a:hover {
+          text-decoration: underline;
+        }
+
+        /* Mockup */
+        .landing-scope .win {
+          background: #0f172a;
+          color: #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
+          font-family: var(--lp-mono);
+          box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.3);
+        }
+
+        .landing-scope .win-h {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.55rem 0.85rem;
+          background: #1e293b;
+          font-size: 0.64rem;
+          color: #94a3b8;
+          gap: 0.5rem;
+        }
+
+        .landing-scope .win-h .on {
+          color: #4ade80;
+          font-weight: 700;
+        }
+
+        .landing-scope .win-b {
+          padding: 1rem;
+        }
+
+        .landing-scope .tot {
+          background: #2f5fe8;
+          color: #fff;
+          padding: 0.8rem 0.9rem;
+          border-radius: 5px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.9rem;
+        }
+
+        .landing-scope .tot span {
+          font-size: 0.68rem;
+          font-weight: 700;
+        }
+
+        .landing-scope .tot b {
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+
+        .landing-scope table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.7rem;
+          margin-bottom: 0.9rem;
+        }
+
+        .landing-scope th {
+          text-align: left;
+          color: #64748b;
+          font-weight: 500;
+          padding: 0.3rem 0.4rem;
+          border-bottom: 1px solid #334155;
+        }
+
+        .landing-scope td {
+          padding: 0.45rem 0.4rem;
+          border-bottom: 1px solid #1e293b;
+        }
+
+        .landing-scope .r {
+          text-align: right;
+        }
+
+        .landing-scope tbody tr {
+          animation: rowin 0.35s ease both;
+        }
+
+        @keyframes rowin {
+          from {
+            opacity: 0;
+            background: #1a2a52;
+          }
+        }
+
+        .landing-scope .keys {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.4rem;
+          font-size: 0.62rem;
+          text-align: center;
+        }
+
+        .landing-scope .keys div {
+          background: #1e293b;
+          border-radius: 4px;
+          padding: 0.4rem 0.2rem;
+          transition: 0.15s;
+        }
+
+        .landing-scope .keys b {
+          color: #8fb0ff;
+        }
+
+        .landing-scope .keys div.hit {
+          background: #2f5fe8;
+          color: #fff;
+        }
+
+        .landing-scope .keys div.hit b {
+          color: #fff;
+        }
+
+        .landing-scope .paid {
+          height: 1.3rem;
+          margin-top: 0.7rem;
+          font-size: 0.7rem;
+          color: #4ade80;
+          font-weight: 700;
+        }
+
+        .landing-scope section {
+          padding: 4.5rem 0;
+          border-top: 1px solid var(--lp-line);
+        }
+
+        .landing-scope .sh {
+          margin-bottom: 2.2rem;
+        }
+
+        .landing-scope h2 {
+          font-size: clamp(1.6rem, 3vw, 2.1rem);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          line-height: 1.15;
+          margin-bottom: 0.5rem;
+        }
+
+        .landing-scope .sh p {
+          color: var(--lp-muted);
+          max-width: 34rem;
+        }
+
+        .landing-scope .feat {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .landing-scope .card {
+          border: 1px solid var(--lp-line);
+          border-radius: 8px;
+          padding: 1.4rem;
+          background: #fff;
+        }
+
+        .landing-scope .card h3 {
+          font-size: 1.05rem;
+          font-weight: 800;
+          margin-bottom: 0.4rem;
+        }
+
+        .landing-scope .card p {
+          color: var(--lp-muted);
+          font-size: 0.92rem;
+        }
+
+        .landing-scope .dsec {
+          background: var(--lp-bg2);
+        }
+
+        .landing-scope .tabs {
+          display: flex;
+          gap: 0.4rem;
+          margin-bottom: 1rem;
+        }
+
+        .landing-scope .tab {
+          font: 700 0.85rem var(--lp-sans);
+          padding: 0.5rem 1.1rem;
+          border: 1px solid var(--lp-line2);
+          border-radius: 6px;
+          background: #fff;
+          color: var(--lp-muted);
+          cursor: pointer;
+        }
+
+        .landing-scope .tab[aria-selected="true"] {
+          border-color: var(--lp-accent);
+          background: var(--lp-sel);
+          color: var(--lp-accent);
+        }
+
+        .landing-scope .panel {
+          display: none;
+          background: #fff;
+          border: 1px solid var(--lp-line);
+          border-radius: 8px;
+          padding: 1.6rem;
+          grid-template-columns: 1fr 1fr;
+          gap: 2rem;
+        }
+
+        .landing-scope .panel.on {
+          display: grid;
+        }
+
+        .landing-scope .panel h3 {
+          font-size: 1.2rem;
+          font-weight: 800;
+          margin-bottom: 0.4rem;
+        }
+
+        .landing-scope .panel p {
+          color: var(--lp-muted);
+          font-size: 0.92rem;
+          margin-bottom: 1rem;
+        }
+
+        .landing-scope .files {
+          font: 500 0.76rem var(--lp-mono);
+          color: var(--lp-muted);
+          border: 1px solid var(--lp-line);
+          border-radius: 6px;
+          padding: 0.8rem 0.9rem;
+          background: var(--lp-bg2);
+        }
+
+        .landing-scope .files b {
+          display: block;
+          margin-bottom: 0.3rem;
+          color: var(--lp-ink);
+        }
+
+        .landing-scope .files li {
+          list-style: none;
+          padding: 0.1rem 0;
+        }
+
+        .landing-scope .links {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          justify-content: center;
+        }
+
+        .landing-scope .lnk {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          border: 1px solid var(--lp-line2);
+          border-radius: 6px;
+          padding: 0.8rem 1rem;
+          font-weight: 700;
+          font-size: 0.9rem;
+          background: #fff;
+        }
+
+        .landing-scope .lnk:hover {
+          border-color: var(--lp-accent);
+          color: var(--lp-accent);
+        }
+
+        .landing-scope .lnk span {
+          font: 500 0.72rem var(--lp-mono);
+          color: var(--lp-faint);
+        }
+
+        .landing-scope .lnk.f {
+          background: var(--lp-accent);
+          border-color: transparent;
+          color: #fff;
+        }
+
+        .landing-scope .lnk.f span {
+          color: #bfdbfe;
+        }
+
+        .landing-scope .lnk.f:hover {
+          background: var(--lp-accent-h);
+          color: #fff;
+        }
+
+        .landing-scope .steps {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+        }
+
+        .landing-scope .n {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 50%;
+          background: var(--lp-accent);
+          color: #fff;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 0.8rem;
+        }
+
+        .landing-scope .step h3 {
+          font-size: 1.05rem;
+          font-weight: 800;
+          margin-bottom: 0.3rem;
+        }
+
+        .landing-scope .step p {
+          color: var(--lp-muted);
+          font-size: 0.92rem;
+        }
+
+        .landing-scope footer {
+          border-top: 1px solid var(--lp-line);
+          padding: 2rem 0;
+          font-size: 0.85rem;
+          color: var(--lp-muted);
+        }
+
+        .landing-scope .foot {
+          display: flex;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .landing-scope .foot nav {
+          display: flex;
+          gap: 1.3rem;
+          flex-wrap: wrap;
+        }
+
+        .landing-scope .foot a:hover {
+          color: var(--lp-accent);
+        }
+
+        @media (max-width: 860px) {
+          .landing-scope .hero-grid,
+          .landing-scope .feat,
+          .landing-scope .steps {
+            grid-template-columns: 1fr;
+          }
+          .landing-scope .panel.on {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+          }
+          .landing-scope .hero {
+            padding-top: 3rem;
+          }
+          .landing-scope section {
+            padding: 3.5rem 0;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .landing-scope * {
+            animation: none !important;
+            transition: none !important;
+            scroll-behavior: auto;
+          }
+        }
+      `}</style>
+
+      {/* Header */}
+      <header>
+        <div className="wrap nav">
+          <Link className="brand" href="#">
+            ILoveBesi <span>POS</span>
+          </Link>
+          {isLoggedIn ? (
+            <Link href="/dashboard" className="btn solid">
+              Buka Dashboard
+            </Link>
+          ) : (
+            <Link href="/login" className="btn">
+              Dashboard Owner
+            </Link>
+          )}
         </div>
       </header>
 
-      {/* Bagian Hero & Rekomendasi Unduhan Utama */}
-      <section className="border-b border-slate-300 bg-white py-12 px-4 sm:px-6">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900 mb-4">
-            <span>Rilis Resmi Desktop POS:</span>
-            <span className="font-mono font-bold">{releaseInfo.version}</span>
-            {releaseInfo.publishedDate && (
-              <span className="text-blue-700">({releaseInfo.publishedDate})</span>
-            )}
-          </div>
-
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            Unduh Aplikasi Kasir Desktop ILoveBesi POS
-          </h1>
-
-          <p className="mt-3 text-sm text-slate-600 sm:text-base max-w-2xl mx-auto">
-            Aplikasi kasir desktop berkecepatan tinggi untuk toko material besi hollow galvanis.
-            Didesain khusus untuk operasional kasir harian dengan navigasi penuh keyboard.
-          </p>
-
-          <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 max-w-2xl mx-auto text-left flex items-start gap-2.5">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5 text-amber-800 shrink-0 mt-0.5"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" x2="12" y1="8" y2="12" />
-              <line x1="12" x2="12.01" y1="16" y2="16" />
-            </svg>
-            <div>
-              <strong className="font-bold">Informasi Isi Paket Unduhan:</strong>
-              <p className="mt-0.5">
-                Setiap unduhan berbentuk paket <strong>.ZIP</strong> yang sudah berisi File Installer Aplikasi Kasir beserta file teks <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong>.
-              </p>
-            </div>
-          </div>
-
-          {/* Tombol Rekomendasi Otomatis Sesuai OS */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {detectedOs === "windows" && (
-              <a
-                href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Windows-64bit.zip`}
-                className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded bg-blue-900 px-6 text-sm font-bold text-white hover:bg-blue-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801" />
-                </svg>
-                <span>Unduh Paket Windows (.zip) [Rekomendasi untuk PC Anda]</span>
-              </a>
-            )}
-
-            {detectedOs === "linux" && (
-              <a
-                href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Linux-DEB.zip`}
-                className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded bg-blue-900 px-6 text-sm font-bold text-white hover:bg-blue-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
-                  <polyline points="4 17 10 11 4 5" />
-                  <line x1="12" x2="20" y1="19" y2="19" />
-                </svg>
-                <span>Unduh Paket Linux Ubuntu / Debian (.deb .zip)</span>
-              </a>
-            )}
-
-            {detectedOs === "macos" && (
-              <a
-                href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-macOS-Apple-Silicon.zip`}
-                className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded bg-blue-900 px-6 text-sm font-bold text-white hover:bg-blue-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.86.96-2.94-1 .04-2.13.67-2.79 1.45-.58.67-1.1 1.76-.96 2.82 1.11.09 2.17-.57 2.79-1.33z" />
-                </svg>
-                <span>Unduh Paket macOS Apple Silicon (.zip)</span>
-              </a>
-            )}
-
-            {detectedOs === "other" && (
-              <a
-                href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Windows-64bit.zip`}
-                className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded bg-blue-900 px-6 text-sm font-bold text-white hover:bg-blue-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801" />
-                </svg>
-                <span>Unduh Paket Windows (.zip)</span>
-              </a>
-            )}
-
-            <a
-              href={`${GITHUB_DOWNLOAD_BASE}/PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt`}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded border border-slate-300 bg-white px-5 text-xs font-bold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-slate-600" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" x2="8" y1="13" y2="13" />
-                <line x1="16" x2="8" y1="17" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-              <span>Baca Panduan TXT Langsung</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Grid Daftar Unduhan Lengkap Berdasarkan Sistem Operasi */}
-      <section className="py-12 px-4 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Pusat Unduhan Seluruh Sistem Operasi
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Pilih paket arsip .zip yang sesuai dengan sistem operasi komputer kasir Anda.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Kartu 1: Windows */}
-            <div className={`rounded-md border p-6 bg-white flex flex-col justify-between ${
-              detectedOs === "windows" ? "border-blue-900 ring-2 ring-blue-900 shadow-md" : "border-slate-300 shadow-sm"
-            }`}>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-100 text-blue-900">
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                        <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900">Windows 10 / 11</h3>
-                  </div>
-                  {detectedOs === "windows" && (
-                    <span className="rounded bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-900 border border-blue-200">
-                      OS Anda
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  Arsip installer untuk PC kasir Windows 64-bit. Berisi installer NSIS Setup (.exe) dan Windows Installer (.msi).
-                </p>
-
-                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs mb-4 space-y-1">
-                  <div className="text-slate-600"><strong>Isi Paket .ZIP:</strong></div>
-                  <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                    <li>Installer Setup .exe (NSIS)</li>
-                    <li>Installer Setup .msi</li>
-                    <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Windows-64bit.zip`}
-                  className="w-full inline-flex h-11 items-center justify-center gap-2 rounded bg-blue-900 px-4 text-xs font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" x2="12" y1="15" y2="3" />
-                  </svg>
-                  <span>Unduh Paket Windows (.zip)</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Kartu 2: Linux */}
-            <div className={`rounded-md border p-6 bg-white flex flex-col justify-between ${
-              detectedOs === "linux" ? "border-blue-900 ring-2 ring-blue-900 shadow-md" : "border-slate-300 shadow-sm"
-            }`}>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-800">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
-                        <polyline points="4 17 10 11 4 5" />
-                        <line x1="12" x2="20" y1="19" y2="19" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900">Linux Distribution</h3>
-                  </div>
-                  {detectedOs === "linux" && (
-                    <span className="rounded bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-900 border border-blue-200">
-                      OS Anda
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  Tersedia untuk berbagai varian Linux modern dalam format RPM, DEB, maupun portable AppImage.
-                </p>
-
-                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs mb-4 space-y-1">
-                  <div className="text-slate-600"><strong>Isi Tiap Paket .ZIP:</strong></div>
-                  <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                    <li>File binary (.rpm, .deb, atau .AppImage)</li>
-                    <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Linux-RPM.zip`}
-                  className="w-full inline-flex h-10 items-center justify-between rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <span>Fedora / RHEL (.rpm .zip)</span>
-                  <span className="font-mono text-[11px] text-slate-500">Unduh</span>
-                </a>
-
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Linux-DEB.zip`}
-                  className="w-full inline-flex h-10 items-center justify-between rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <span>Ubuntu / Debian (.deb .zip)</span>
-                  <span className="font-mono text-[11px] text-slate-500">Unduh</span>
-                </a>
-
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-Linux-AppImage.zip`}
-                  className="w-full inline-flex h-10 items-center justify-between rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <span>Universal Linux (.AppImage .zip)</span>
-                  <span className="font-mono text-[11px] text-slate-500">Unduh</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Kartu 3: macOS */}
-            <div className={`rounded-md border p-6 bg-white flex flex-col justify-between ${
-              detectedOs === "macos" ? "border-blue-900 ring-2 ring-blue-900 shadow-md" : "border-slate-300 shadow-sm"
-            }`}>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-800">
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.86.96-2.94-1 .04-2.13.67-2.79 1.45-.58.67-1.1 1.76-.96 2.82 1.11.09 2.17-.57 2.79-1.33z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900">macOS (Apple Mac)</h3>
-                  </div>
-                  {detectedOs === "macos" && (
-                    <span className="rounded bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-900 border border-blue-200">
-                      OS Anda
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  Paket berkas disk image (.dmg) terpisah untuk Mac dengan prosesor Apple Silicon (M1/M2/M3/M4) maupun Mac berbasis Intel.
-                </p>
-
-                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs mb-4 space-y-1">
-                  <div className="text-slate-600"><strong>Isi Tiap Paket .ZIP:</strong></div>
-                  <ul className="list-disc pl-4 text-slate-700 space-y-0.5">
-                    <li>Berkas installer disk image (.dmg)</li>
-                    <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-macOS-Apple-Silicon.zip`}
-                  className="w-full inline-flex h-10 items-center justify-between rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <span>Apple Silicon (M1/M2/M3/M4 .zip)</span>
-                  <span className="font-mono text-[11px] text-slate-500">Unduh</span>
-                </a>
-
-                <a
-                  href={`${GITHUB_DOWNLOAD_BASE}/ILoveBesi-POS-macOS-Intel.zip`}
-                  className="w-full inline-flex h-10 items-center justify-between rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  <span>Intel Mac (.dmg .zip)</span>
-                  <span className="font-mono text-[11px] text-slate-500">Unduh</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Bagian Ringkasan 3 Langkah Instalasi & Penggunaan */}
-      <section className="border-t border-slate-300 bg-white py-12 px-4 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 border-b border-slate-200 pb-3">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              3 Langkah Memulai Operasional Kasir
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Petunjuk ringkas sejak mengunduh file hingga siap melayani transaksi pelanggan.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Langkah 1 */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-5 text-xs">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-blue-900 font-bold text-white text-xs">
-                  1
-                </span>
-                <h3 className="font-bold text-sm text-slate-900">Ekstrak File .ZIP & Pasang</h3>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                Klik kanan file .zip yang diunduh lalu pilih <strong>Extract All (Ekstrak Semua)</strong>. Buka file <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong> untuk membaca solusi jika muncul jendela peringatan Windows SmartScreen atau Gatekeeper macOS.
-              </p>
-            </div>
-
-            {/* Langkah 2 */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-5 text-xs">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-blue-900 font-bold text-white text-xs">
-                  2
-                </span>
-                <h3 className="font-bold text-sm text-slate-900">Masuk Akun Toko (Login)</h3>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                Jalankan aplikasi kasir, masukkan email dan kata sandi akun toko Anda yang terdaftar. Seluruh katalog produk, ukuran pipa hollow, ketebalan plat, dan harga jual akan langsung tersinkronisasi otomatis.
-              </p>
-            </div>
-
-            {/* Langkah 3 */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-5 text-xs">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-blue-900 font-bold text-white text-xs">
-                  3
-                </span>
-                <h3 className="font-bold text-sm text-slate-900">Buka Kasir & Mulai Transaksi</h3>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                Ketik nama kasir jaga dan modal awal laci kasir, lalu tekan <strong>[Enter]</strong>. Gunakan pintasan <strong>F1 s/d F11</strong> untuk transaksi cepat keyboard penuh, dan tombol <strong>[Esc]</strong> untuk rekapitulasi tutup shift kasir.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer Sederhana */}
-      <footer className="border-t border-slate-300 bg-slate-100 py-6 px-4 sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+      {/* Hero */}
+      <div className="hero">
+        <div className="wrap hero-grid">
           <div>
-            <strong>ILoveBesi POS</strong> &copy; {new Date().getFullYear()} Sistem Kasir & Manajemen Toko Besi Hollow Galvanis.
+            <span className="tag">v1.0.3 stabil, multi-tenant</span>
+            <h1>Kasir secepat ketikan, untuk toko besi &amp; baja.</h1>
+            <p className="lead">
+              Dirancang khusus untuk transaksi pipa hollow, plat baja, dan besi
+              beton. Operasional 100% lewat papan ketik tanpa sentuh mouse, stok
+              terpotong riil, dan terisolasi per toko.
+            </p>
+            <div className="dl">
+              <div className="dl-top">
+                <span>{currentOsCfg.label}</span>
+                <span>{currentOsCfg.ver}</span>
+              </div>
+              <a
+                className="btn solid"
+                href={`${GITHUB_BASE}${currentOsCfg.file}`}
+              >
+                <div>
+                  <span>{currentOsCfg.btnText}</span>
+                  <small>{currentOsCfg.btnSub}</small>
+                </div>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />
+                </svg>
+              </a>
+              <p>
+                Arsip .ZIP menyertakan{" "}
+                <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong> berisi cara
+                mengatasi layar biru Windows Defender SmartScreen dan petunjuk
+                F1-F11.
+              </p>
+              <div className="alt">
+                <a href="#unduh">Sistem operasi lain? Lihat semua unduhan</a>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="hover:text-slate-900 underline font-medium">
-              Login Dashboard Pemilik
-            </Link>
-            <a
-              href={`${GITHUB_DOWNLOAD_BASE}/PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt`}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-slate-900 underline font-medium"
+
+          <div className="win" aria-label="Pratinjau antarmuka kasir">
+            <div className="win-h">
+              <span>ILoveBesi POS Desktop v1.0.3 [Kasir: Budi - Shift Aktif]</span>
+              <span className="on">ONLINE</span>
+            </div>
+            <div className="win-b">
+              <div className="tot">
+                <span>Total Tagihan [F7]</span>
+                <b>Rp {runningTotal.toLocaleString("id-ID")}</b>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item / Barang</th>
+                    <th>Qty</th>
+                    <th className="r">Harga</th>
+                    <th className="r">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cartItems.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.name}</td>
+                      <td>{r.qty}</td>
+                      <td className="r">{r.price}</td>
+                      <td className="r">{r.subtotal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="keys">
+                <div className={activeKey === "f1" ? "hit" : ""}>
+                  <b>[F1]</b> Cari
+                </div>
+                <div className={activeKey === "f7" ? "hit" : ""}>
+                  <b>[F7]</b> Bayar
+                </div>
+                <div className={activeKey === "f8" ? "hit" : ""}>
+                  <b>[F8]</b> Pelanggan
+                </div>
+                <div>
+                  <b>[Esc]</b> Tutup Kasir
+                </div>
+              </div>
+              <div className="paid">{paidStatus}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <section>
+        <div className="wrap">
+          <div className="sh">
+            <h2>Dibuat untuk kebutuhan toko besi</h2>
+            <p>
+              Bukan software kasir ritel umum. Disesuaikan dengan alur barang
+              material dan piutang kontraktor.
+            </p>
+          </div>
+          <div className="feat">
+            <div className="card">
+              <h3>100% navigasi keyboard</h3>
+              <p>
+                Tombol fungsi F1 sampai F11 memungkinkan kasir mengetik nomor nota,
+                mencari hollow, dan mencetak faktur dalam hitungan detik tanpa
+                menyentuh mouse.
+              </p>
+            </div>
+            <div className="card">
+              <h3>Katalog batang &amp; tebal</h3>
+              <p>
+                Manajemen dimensi pipa dan ketebalan milimeter presisi. Harga modal
+                HPP terhitung otomatis dengan moving average.
+              </p>
+            </div>
+            <div className="card">
+              <h3>Cicilan &amp; piutang kredit</h3>
+              <p>
+                Transaksi KREDIT dengan uang muka (DP), limit piutang per
+                pelanggan, histori faktur, dan modul pelunasan cicilan terpadu.
+              </p>
+            </div>
+            <div className="card">
+              <h3>Buka &amp; tutup kasir (shift)</h3>
+              <p>
+                Kasir menginput modal awal laci saat buka toko. Saat tutup, sistem
+                menampilkan rekapitulasi vertikal penjualan.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Downloads */}
+      <section className="dsec" id="unduh">
+        <div className="wrap">
+          <div className="sh">
+            <h2>Unduh untuk semua sistem operasi</h2>
+            <p>
+              Setiap berkas berbentuk paket .zip resmi yang berisi installer dan
+              buku panduan penggunaan format plain text (.txt).
+            </p>
+          </div>
+          <div className="tabs" role="tablist">
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={activeTab === "win"}
+              onClick={() => setActiveTab("win")}
             >
-              Dokumentasi Panduan TXT
-            </a>
+              Windows
+            </button>
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={activeTab === "linux"}
+              onClick={() => setActiveTab("linux")}
+            >
+              Linux
+            </button>
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={activeTab === "mac"}
+              onClick={() => setActiveTab("mac")}
+            >
+              macOS
+            </button>
           </div>
+
+          <div className={`panel ${activeTab === "win" ? "on" : ""}`} role="tabpanel">
+            <div>
+              <h3>Windows 10 / 11</h3>
+              <p>
+                Arsip installer untuk PC kasir berbasis Windows 64-bit. Mendukung
+                instalasi cepat NSIS dan Windows Installer standar.
+              </p>
+              <div className="files">
+                <b>Isi paket .ZIP</b>
+                <ul>
+                  <li>ILoveBesi POS Setup .exe (NSIS)</li>
+                  <li>ILoveBesi POS Setup .msi</li>
+                  <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
+                </ul>
+              </div>
+            </div>
+            <div className="links">
+              <a
+                className="lnk f"
+                href={`${GITHUB_BASE}ILoveBesi-POS-Windows-64bit.zip`}
+              >
+                Unduh Paket Windows (.zip)<span>64-bit</span>
+              </a>
+            </div>
+          </div>
+
+          <div
+            className={`panel ${activeTab === "linux" ? "on" : ""}`}
+            role="tabpanel"
+          >
+            <div>
+              <h3>Distro Linux</h3>
+              <p>
+                Paket native untuk distribusi Linux modern. Siap jalan di workstation
+                toko dengan performa memori ultra-ringan.
+              </p>
+              <div className="files">
+                <b>Isi tiap paket .ZIP</b>
+                <ul>
+                  <li>Berkas biner installer (.rpm, .deb, atau .AppImage)</li>
+                  <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
+                </ul>
+              </div>
+            </div>
+            <div className="links">
+              <a
+                className="lnk"
+                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-RPM.zip`}
+              >
+                Fedora / RHEL<span>.rpm .zip</span>
+              </a>
+              <a
+                className="lnk"
+                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-DEB.zip`}
+              >
+                Ubuntu / Debian<span>.deb .zip</span>
+              </a>
+              <a
+                className="lnk"
+                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-AppImage.zip`}
+              >
+                Universal Portable<span>.AppImage .zip</span>
+              </a>
+            </div>
+          </div>
+
+          <div className={`panel ${activeTab === "mac" ? "on" : ""}`} role="tabpanel">
+            <div>
+              <h3>macOS Apple</h3>
+              <p>
+                Berkas disk image (.dmg) native untuk laptop atau komputer Mac
+                pemilik toko, teroptimasi untuk chip Apple Silicon dan Intel.
+              </p>
+              <div className="files">
+                <b>Isi tiap paket .ZIP</b>
+                <ul>
+                  <li>Berkas disk image installer (.dmg)</li>
+                  <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
+                </ul>
+              </div>
+            </div>
+            <div className="links">
+              <a
+                className="lnk"
+                href={`${GITHUB_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`}
+              >
+                Apple Silicon (M1/M2/M3/M4)<span>.dmg .zip</span>
+              </a>
+              <a
+                className="lnk"
+                href={`${GITHUB_BASE}ILoveBesi-POS-macOS-Intel.zip`}
+              >
+                Intel Mac<span>.dmg .zip</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Steps */}
+      <section>
+        <div className="wrap">
+          <div className="sh">
+            <h2>3 langkah mudah memulai</h2>
+          </div>
+          <div className="steps">
+            <div className="step">
+              <div className="n">1</div>
+              <h3>Ekstrak file .ZIP</h3>
+              <p>
+                Klik kanan file .zip yang telah diunduh, pilih Extract All (Ekstrak
+                Semua). Buka file panduan teks jika muncul pesan Microsoft
+                Defender SmartScreen.
+              </p>
+            </div>
+            <div className="step">
+              <div className="n">2</div>
+              <h3>Login akun toko</h3>
+              <p>
+                Buka aplikasi, masukkan email dan password toko Anda. Seluruh
+                katalog barang, harga jual, dan stok otomatis tersinkronisasi.
+              </p>
+            </div>
+            <div className="step">
+              <div className="n">3</div>
+              <h3>Buka kasir &amp; transaksi</h3>
+              <p>
+                Ketik nama kasir jaga dan uang modal awal di laci kasir. Tekan
+                [Enter] untuk membuka meja kasir dan mulai melayani dengan pintasan
+                F1-F11.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer>
+        <div className="wrap foot">
+          <div>
+            <strong>ILoveBesi POS</strong> - Sistem kasir &amp; manajemen toko besi
+            hollow galvanis.
+          </div>
+          <nav>
+            <Link href="/login">Login Dashboard Pemilik</Link>
+            <a
+              href="/PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt"
+              target="_blank"
+              rel="noopener"
+            >
+              Panduan Instalasi
+            </a>
+          </nav>
         </div>
       </footer>
     </div>
