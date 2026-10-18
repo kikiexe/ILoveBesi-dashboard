@@ -17,13 +17,34 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  let profile = null;
+  const { data: existingProfile } = await supabase
     .from("profiles")
     .select("role, full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (!profile || profile.role !== "owner") {
+  if (!existingProfile) {
+    const fallbackName =
+      (user.user_metadata?.full_name as string) ||
+      user.email?.split("@")[0] ||
+      "Owner Toko";
+    const { data: createdProfile } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        role: "owner",
+        full_name: fallbackName,
+      })
+      .select("role, full_name")
+      .single();
+
+    profile = createdProfile || { role: "owner", full_name: fallbackName };
+  } else {
+    profile = existingProfile;
+  }
+
+  if (profile.role !== "owner") {
     await supabase.auth.signOut();
     redirect("/login");
   }

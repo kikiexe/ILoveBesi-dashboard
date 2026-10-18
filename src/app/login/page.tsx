@@ -30,21 +30,37 @@ export default function LoginPage() {
         return;
       }
 
-      /* Verify user role in public.profiles */
-      const { data: profile, error: profileError } = await supabase
+      /* Verify user role in public.profiles, auto-provisioning owner profile if missing */
+      let userRole = "owner";
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", authData.user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profile) {
-        await supabase.auth.signOut();
-        setErrorMessage("Profil pengguna tidak ditemukan pada sistem.");
-        setIsLoading(false);
-        return;
+      if (!profile) {
+        const fallbackName =
+          (authData.user.user_metadata?.full_name as string) ||
+          authData.user.email?.split("@")[0] ||
+          "Owner Toko";
+        const { error: insertError } = await supabase.from("profiles").insert({
+          id: authData.user.id,
+          role: "owner",
+          full_name: fallbackName,
+        });
+        if (insertError) {
+          const { data: reProfile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", authData.user.id)
+            .maybeSingle();
+          if (reProfile) userRole = reProfile.role;
+        }
+      } else {
+        userRole = profile.role;
       }
 
-      if (profile.role !== "owner") {
+      if (userRole !== "owner") {
         await supabase.auth.signOut();
         setErrorMessage("Akses ditolak: Akun kasir hanya dapat digunakan pada Aplikasi Desktop Kasir.");
         setIsLoading(false);
