@@ -214,7 +214,7 @@ export default function ExpensesPage() {
             <input
               id="expense-amount"
               type="number"
-              step="100"
+              step="any"
               min="1"
               required
               placeholder="Contoh: 150000"

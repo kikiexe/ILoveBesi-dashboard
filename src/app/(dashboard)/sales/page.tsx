@@ -627,7 +627,7 @@ export default function SalesPage() {
                     <input
                       id="pay-amount"
                       type="number"
-                      step="100"
+                      step="any"
                       min="1"
                       required
                       placeholder="Masukkan jumlah yang dibayarkan"

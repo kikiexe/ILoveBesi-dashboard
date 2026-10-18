@@ -443,7 +443,7 @@ export default function PurchasesPage() {
                       <input
                         id={`item-price-${index}`}
                         type="number"
-                        step="100"
+                        step="any"
                         min="0"
                         value={item.buy_price}
                         onChange={(e) => handleItemChange(index, "buy_price", parseFloat(e.target.value) || 0)}

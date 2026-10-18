@@ -275,7 +275,7 @@ export default function ProductsPage() {
               <input
                 id="add-thickness"
                 type="number"
-                step="0.01"
+                step="any"
                 required
                 value={addFormValues.thickness_mm}
                 onChange={(e) => setAddFormValues({ ...addFormValues, thickness_mm: parseFloat(e.target.value) || 0 })}
@@ -300,7 +300,7 @@ export default function ProductsPage() {
               <input
                 id="add-cost"
                 type="number"
-                step="100"
+                step="any"
                 required
                 value={addFormValues.avg_cost_price}
                 onChange={(e) => setAddFormValues({ ...addFormValues, avg_cost_price: parseFloat(e.target.value) || 0 })}
@@ -313,7 +313,7 @@ export default function ProductsPage() {
               <input
                 id="add-price"
                 type="number"
-                step="100"
+                step="any"
                 required
                 value={addFormValues.sell_price}
                 onChange={(e) => setAddFormValues({ ...addFormValues, sell_price: parseFloat(e.target.value) || 0 })}
@@ -619,7 +619,7 @@ export default function ProductsPage() {
                   <input
                     id="edit-thickness"
                     type="number"
-                    step="0.01"
+                    step="any"
                     required
                     value={editFormValues.thickness_mm}
                     onChange={(e) => setEditFormValues({ ...editFormValues, thickness_mm: parseFloat(e.target.value) || 0 })}
@@ -633,7 +633,7 @@ export default function ProductsPage() {
                 <input
                   id="edit-price"
                   type="number"
-                  step="100"
+                  step="any"
                   required
                   value={editFormValues.sell_price}
                   onChange={(e) => setEditFormValues({ ...editFormValues, sell_price: parseFloat(e.target.value) || 0 })}
