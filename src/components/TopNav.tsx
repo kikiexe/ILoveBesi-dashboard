@@ -127,7 +127,7 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
   };
 
   const navItems: NavItem[] = [
-    { label: "Ringkasan", mobileLabel: "Ringkasan", href: "/", icon: "dashboard" },
+    { label: "Ringkasan", mobileLabel: "Ringkasan", href: "/dashboard", icon: "dashboard" },
     { label: "Stok & Harga", mobileLabel: "Stok", href: "/products", icon: "products" },
     { label: "Kulakan", mobileLabel: "Kulakan", href: "/purchases", icon: "purchases" },
     { label: "Piutang & Penjualan", mobileLabel: "Penjualan", href: "/sales", icon: "sales" },
@@ -146,14 +146,35 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-slate-700 sm:inline-block">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/"
+              className="inline-flex h-9 items-center gap-1.5 rounded border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 text-blue-900"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" x2="12" y1="15" y2="3" />
+              </svg>
+              <span className="hidden sm:inline">Unduh Kasir Desktop</span>
+              <span className="sm:hidden">Unduh POS</span>
+            </Link>
+            <span className="hidden text-xs text-slate-700 md:inline-block">
               {userName || userEmail || "Pemilik Toko"}
             </span>
             <button
               type="button"
               onClick={handleLogout}
-              className="h-10 rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+              className="h-9 sm:h-10 rounded border border-slate-300 bg-white px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
             >
               Keluar
             </button>
@@ -165,8 +186,8 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
           <div className="mx-auto flex max-w-7xl overflow-x-auto px-4 sm:px-6 whitespace-nowrap">
             {navItems.map((item) => {
               const isActive =
-                item.href === "/"
-                  ? pathname === "/"
+                item.href === "/dashboard"
+                  ? pathname === "/dashboard"
                   : pathname.startsWith(item.href);
 
               return (
@@ -202,8 +223,8 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
         >
           {navItems.map((item) => {
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
                 : pathname.startsWith(item.href);
 
             return (

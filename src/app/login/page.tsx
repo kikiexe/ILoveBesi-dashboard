@@ -68,7 +68,7 @@ export default function LoginPage() {
       }
 
       /* Successfully verified as owner */
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setErrorMessage("Terjadi kesalahan jaringan saat mencoba masuk.");

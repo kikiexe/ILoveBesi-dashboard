@@ -35,11 +35,16 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const isLandingPage = pathname === "/";
   const isLoginPage = pathname.startsWith("/login");
   const isCronPage = pathname.startsWith("/api/cron");
-  const isPublicAsset = pathname.startsWith("/_next") || pathname.startsWith("/favicon.ico");
+  const isPublicAsset =
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/manifest.webmanifest") ||
+    pathname.startsWith("/icons");
 
-  if (!user && !isLoginPage && !isCronPage && !isPublicAsset) {
+  if (!user && !isLoginPage && !isCronPage && !isPublicAsset && !isLandingPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -47,7 +52,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
