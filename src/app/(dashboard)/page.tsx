@@ -65,10 +65,10 @@ export default function SummaryPage() {
       const supabase = createClient();
       const { startIso, endIso, startDate: wibStartDate, endDate: wibEndDate } = getDateRange();
 
-      /* 1. Fetch sales and calculate Total Revenue */
+      /* 1. Fetch sales and embedded sale_items to calculate Total Revenue and Total COGS */
       let salesQuery = supabase
         .from("sales")
-        .select("id, grand_total, sale_date");
+        .select("id, grand_total, sale_date, sale_items ( qty, cost_price_at_sale )");
 
       if (startIso) salesQuery = salesQuery.gte("sale_date", startIso);
       if (endIso) salesQuery = salesQuery.lte("sale_date", endIso);
@@ -76,23 +76,17 @@ export default function SummaryPage() {
       const { data: salesData, error: salesError } = await salesQuery;
       if (salesError) throw new Error(salesError.message);
 
-      const saleIds = (salesData || []).map((s) => s.id);
-      const totalRevenue = (salesData || []).reduce((acc, curr) => acc + Number(curr.grand_total || 0), 0);
-
-      /* 2. Fetch sale_items for those sales to calculate Total COGS */
+      let totalRevenue = 0;
       let totalCogs = 0;
-      if (saleIds.length > 0) {
-        const { data: itemsData, error: itemsError } = await supabase
-          .from("sale_items")
-          .select("qty, cost_price_at_sale")
-          .in("sale_id", saleIds);
 
-        if (itemsError) throw new Error(itemsError.message);
-
-        totalCogs = (itemsData || []).reduce(
-          (acc, item) => acc + Number(item.qty || 0) * Number(item.cost_price_at_sale || 0),
-          0
-        );
+      for (const sale of salesData || []) {
+        totalRevenue += Number(sale.grand_total || 0);
+        const items = sale.sale_items as Array<{ qty: number; cost_price_at_sale: number }> | null;
+        if (items) {
+          for (const item of items) {
+            totalCogs += Number(item.qty || 0) * Number(item.cost_price_at_sale || 0);
+          }
+        }
       }
 
       /* 3. Fetch operational expenses */
