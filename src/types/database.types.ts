@@ -39,6 +39,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      cashier_shifts: {
+        Row: {
+          cashier_name: string
+          closed_at: string | null
+          created_at: string
+          id: string
+          opened_at: string
+          opening_cash: number
+          owner_id: string
+          status: "OPEN" | "CLOSED"
+          total_kredit: number
+          total_qris: number
+          total_sales: number
+          total_tunai: number
+        }
+        Insert: {
+          cashier_name: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          opened_at?: string
+          opening_cash?: number
+          owner_id?: string
+          status?: "OPEN" | "CLOSED"
+          total_kredit?: number
+          total_qris?: number
+          total_sales?: number
+          total_tunai?: number
+        }
+        Update: {
+          cashier_name?: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          opened_at?: string
+          opening_cash?: number
+          owner_id?: string
+          status?: "OPEN" | "CLOSED"
+          total_kredit?: number
+          total_qris?: number
+          total_sales?: number
+          total_tunai?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -47,6 +92,7 @@ export type Database = {
           credit_limit: number
           id: string
           name: string
+          owner_id: string
           phone: string | null
         }
         Insert: {
@@ -56,6 +102,7 @@ export type Database = {
           credit_limit?: number
           id?: string
           name: string
+          owner_id?: string
           phone?: string | null
         }
         Update: {
@@ -65,6 +112,7 @@ export type Database = {
           credit_limit?: number
           id?: string
           name?: string
+          owner_id?: string
           phone?: string | null
         }
         Relationships: []
@@ -78,6 +126,7 @@ export type Database = {
           expense_date: string
           id: string
           notes: string | null
+          owner_id: string
         }
         Insert: {
           amount: number
@@ -87,6 +136,7 @@ export type Database = {
           expense_date?: string
           id?: string
           notes?: string | null
+          owner_id?: string
         }
         Update: {
           amount?: number
@@ -96,6 +146,7 @@ export type Database = {
           expense_date?: string
           id?: string
           notes?: string | null
+          owner_id?: string
         }
         Relationships: [
           {
@@ -115,6 +166,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          owner_id: string
           sell_price: number
           sku: string
           stock_qty: number
@@ -129,6 +181,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          owner_id?: string
           sell_price?: number
           sku: string
           stock_qty?: number
@@ -143,6 +196,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          owner_id?: string
           sell_price?: number
           sku?: string
           stock_qty?: number
@@ -229,6 +283,7 @@ export type Database = {
           id: string
           invoice_number: string
           notes: string | null
+          owner_id: string
           purchase_date: string
           supplier_id: string | null
           total_amount: number
@@ -239,6 +294,7 @@ export type Database = {
           id?: string
           invoice_number: string
           notes?: string | null
+          owner_id?: string
           purchase_date?: string
           supplier_id?: string | null
           total_amount: number
@@ -249,6 +305,7 @@ export type Database = {
           id?: string
           invoice_number?: string
           notes?: string | null
+          owner_id?: string
           purchase_date?: string
           supplier_id?: string | null
           total_amount?: number
@@ -379,6 +436,7 @@ export type Database = {
       sales: {
         Row: {
           cashier_id: string
+          cashier_name: string | null
           created_at: string
           customer_id: string | null
           discount_amount: number
@@ -387,16 +445,19 @@ export type Database = {
           id: string
           invoice_number: string
           notes: string | null
+          owner_id: string
           paid_amount: number
           payment_status: string
           payment_type: string
           remaining_debt: number
           sale_date: string
+          shift_id: string | null
           subtotal_amount: number
           tax_amount: number
         }
         Insert: {
           cashier_id: string
+          cashier_name?: string | null
           created_at?: string
           customer_id?: string | null
           discount_amount?: number
@@ -405,16 +466,19 @@ export type Database = {
           id?: string
           invoice_number: string
           notes?: string | null
+          owner_id?: string
           paid_amount?: number
           payment_status: string
           payment_type: string
           remaining_debt?: number
           sale_date?: string
+          shift_id?: string | null
           subtotal_amount: number
           tax_amount?: number
         }
         Update: {
           cashier_id?: string
+          cashier_name?: string | null
           created_at?: string
           customer_id?: string | null
           discount_amount?: number
@@ -423,11 +487,13 @@ export type Database = {
           id?: string
           invoice_number?: string
           notes?: string | null
+          owner_id?: string
           paid_amount?: number
           payment_status?: string
           payment_type?: string
           remaining_debt?: number
           sale_date?: string
+          shift_id?: string | null
           subtotal_amount?: number
           tax_amount?: number
         }
@@ -446,6 +512,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sales_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "cashier_shifts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       suppliers: {
@@ -454,6 +527,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          owner_id: string
           phone: string | null
         }
         Insert: {
@@ -461,6 +535,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          owner_id?: string
           phone?: string | null
         }
         Update: {
@@ -468,6 +543,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          owner_id?: string
           phone?: string | null
         }
         Relationships: []
@@ -480,6 +556,7 @@ export type Database = {
           id: string | null
           is_active: boolean | null
           name: string | null
+          owner_id: string | null
           sell_price: number | null
           sku: string | null
           stock_qty: number | null
@@ -492,6 +569,7 @@ export type Database = {
           id?: string | null
           is_active?: boolean | null
           name?: string | null
+          owner_id?: string | null
           sell_price?: number | null
           sku?: string | null
           stock_qty?: number | null
@@ -504,6 +582,7 @@ export type Database = {
           id?: string | null
           is_active?: boolean | null
           name?: string | null
+          owner_id?: string | null
           sell_price?: number | null
           sku?: string | null
           stock_qty?: number | null
