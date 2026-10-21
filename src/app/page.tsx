@@ -9,33 +9,42 @@ interface OSConfig {
   ver: string;
   btnText: string;
   btnSub: string;
-  file: string;
+  downloadUrl: string;
 }
 
-const GITHUB_BASE =
+const GITHUB_DESKTOP_BASE =
   "https://github.com/kikiexe/ILoveBesi-desktop/releases/latest/download/";
+const GITHUB_MOBILE_APK =
+  "https://github.com/kikiexe/ILoveBesi-mobile/releases/latest/download/app-release.apk";
 
-const OS_CONFIGS: Record<"win" | "mac" | "linux", OSConfig> = {
+const OS_CONFIGS: Record<"win" | "mac" | "linux" | "android", OSConfig> = {
   win: {
     label: "Terdeteksi: Windows 64-bit",
-    ver: "v1.0.3 .ZIP",
+    ver: "v1.1.0 .ZIP",
     btnText: "Unduh Paket Windows (.zip)",
     btnSub: "Termasuk installer .exe (NSIS), .msi & panduan instalasi TXT",
-    file: "ILoveBesi-POS-Windows-64bit.zip",
+    downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`,
   },
   mac: {
     label: "Terdeteksi: macOS",
-    ver: "v1.0.3 .DMG .ZIP",
+    ver: "v1.1.0 .DMG .ZIP",
     btnText: "Unduh untuk Apple Silicon (.zip)",
     btnSub: "Pakai Intel Mac? Pilih di tab macOS",
-    file: "ILoveBesi-POS-macOS-Apple-Silicon.zip",
+    downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`,
   },
   linux: {
     label: "Terdeteksi: Linux",
-    ver: "v1.0.3 .AppImage .ZIP",
+    ver: "v1.1.0 .AppImage .ZIP",
     btnText: "Unduh Universal Portable (.zip)",
     btnSub: "Berisi AppImage & panduan TXT. Paket .deb dan .rpm ada di tab Linux",
-    file: "ILoveBesi-POS-Linux-AppImage.zip",
+    downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-AppImage.zip`,
+  },
+  android: {
+    label: "Terdeteksi: Android Smartphone",
+    ver: "v1.1.0 .APK",
+    btnText: "Unduh ILuvBesi Mobile (.apk)",
+    btnSub: "Dashboard realtime pemilik toko untuk Android",
+    downloadUrl: GITHUB_MOBILE_APK,
   },
 };
 
@@ -65,8 +74,8 @@ const DEMO_ROWS: CartRow[] = [
 ];
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<"win" | "linux" | "mac">("win");
-  const [detectedOs, setDetectedOs] = useState<"win" | "linux" | "mac">("win");
+  const [activeTab, setActiveTab] = useState<"win" | "linux" | "mac" | "android">("win");
+  const [detectedOs, setDetectedOs] = useState<"win" | "linux" | "mac" | "android">("win");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // POS Demo states
@@ -81,10 +90,12 @@ export default function LandingPage() {
   useEffect(() => {
     // Detect OS
     const ua = (navigator.userAgent || "") + " " + (navigator.platform || "");
-    let os: "win" | "linux" | "mac" = "win";
-    if (/Mac/i.test(ua) && !/iPhone|iPad/i.test(ua)) {
+    let os: "win" | "linux" | "mac" | "android" = "win";
+    if (/Android/i.test(ua)) {
+      os = "android";
+    } else if (/Mac/i.test(ua) && !/iPhone|iPad/i.test(ua)) {
       os = "mac";
-    } else if (/Linux/i.test(ua) && !/Android/i.test(ua)) {
+    } else if (/Linux/i.test(ua)) {
       os = "linux";
     }
     setDetectedOs(os);
@@ -797,7 +808,7 @@ export default function LandingPage() {
       <div className="hero">
         <div className="wrap hero-grid">
           <div>
-            <span className="tag">v1.0.3 stabil, multi-tenant</span>
+            <span className="tag">v1.1.0 stabil, multi-tenant</span>
             <h1>Kasir secepat ketikan, untuk toko besi &amp; baja.</h1>
             <p className="lead">
               Dirancang khusus untuk transaksi pipa hollow, plat baja, dan besi
@@ -811,7 +822,7 @@ export default function LandingPage() {
               </div>
               <a
                 className="btn solid"
-                href={`${GITHUB_BASE}${currentOsCfg.file}`}
+                href={currentOsCfg.downloadUrl}
               >
                 <div>
                   <span>{currentOsCfg.btnText}</span>
@@ -829,20 +840,19 @@ export default function LandingPage() {
                 </svg>
               </a>
               <p>
-                Arsip .ZIP menyertakan{" "}
-                <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong> berisi cara
-                mengatasi layar biru Windows Defender SmartScreen dan petunjuk
-                F1-F11.
+                Paket instalasi menyertakan{" "}
+                <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong> berisi petunjuk
+                lengkap shortcut kasir F1-F11 dan panduan operasional.
               </p>
               <div className="alt">
-                <a href="#unduh">Sistem operasi lain? Lihat semua unduhan</a>
+                <a href="#unduh">Sistem operasi lain atau Android APK? Lihat semua unduhan</a>
               </div>
             </div>
           </div>
 
           <div className="win" aria-label="Pratinjau antarmuka kasir">
             <div className="win-h">
-              <span>ILuvBesi POS Desktop v1.0.3 [Kasir: Budi - Shift Aktif]</span>
+              <span>ILuvBesi POS Desktop v1.1.0 [Kasir: Budi - Shift Aktif]</span>
               <span className="on">ONLINE</span>
             </div>
             <div className="win-b">
@@ -930,6 +940,24 @@ export default function LandingPage() {
                 menampilkan rekapitulasi vertikal penjualan.
               </p>
             </div>
+            <div className="card" style={{ borderColor: '#3b82f6', background: '#eff6ff' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <h3 style={{ color: '#1e3a8a', margin: 0 }}>Dashboard Mobile Android</h3>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, background: '#1e3a8a', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                  BARU v1.1.0
+                </span>
+              </div>
+              <p style={{ color: '#1e40af', marginBottom: '0.8rem' }}>
+                Khusus pemilik toko: pantau omzet realtime, riwayat nota kasir, ubah stok &amp; HPP, dan catat cicilan piutang langsung dari smartphone Android.
+              </p>
+              <a
+                href={GITHUB_MOBILE_APK}
+                className="btn solid"
+                style={{ fontSize: '0.8rem', padding: '0.5rem 0.8rem', width: 'fit-content' }}
+              >
+                Unduh Dashboard Mobile APK (.apk)
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -940,8 +968,7 @@ export default function LandingPage() {
           <div className="sh">
             <h2>Unduh untuk semua sistem operasi</h2>
             <p>
-              Setiap berkas berbentuk paket .zip resmi yang berisi installer dan
-              buku panduan penggunaan format plain text (.txt).
+              Tersedia aplikasi desktop kasir untuk Windows, Linux, macOS, dan aplikasi mobile dashboard pemilik toko untuk Android.
             </p>
           </div>
           <div className="tabs" role="tablist">
@@ -969,6 +996,14 @@ export default function LandingPage() {
             >
               macOS
             </button>
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={activeTab === "android"}
+              onClick={() => setActiveTab("android")}
+            >
+              Android (Mobile APK)
+            </button>
           </div>
 
           <div className={`panel ${activeTab === "win" ? "on" : ""}`} role="tabpanel">
@@ -990,9 +1025,9 @@ export default function LandingPage() {
             <div className="links">
               <a
                 className="lnk f"
-                href={`${GITHUB_BASE}ILoveBesi-POS-Windows-64bit.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`}
               >
-                Unduh Paket Windows (.zip)<span>64-bit</span>
+                Unduh Paket Windows (.zip)<span>64-bit (v1.1.0)</span>
               </a>
             </div>
           </div>
@@ -1018,19 +1053,19 @@ export default function LandingPage() {
             <div className="links">
               <a
                 className="lnk"
-                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-RPM.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-RPM.zip`}
               >
                 Fedora / RHEL<span>.rpm .zip</span>
               </a>
               <a
                 className="lnk"
-                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-DEB.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-DEB.zip`}
               >
                 Ubuntu / Debian<span>.deb .zip</span>
               </a>
               <a
                 className="lnk"
-                href={`${GITHUB_BASE}ILoveBesi-POS-Linux-AppImage.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-AppImage.zip`}
               >
                 Universal Portable<span>.AppImage .zip</span>
               </a>
@@ -1055,15 +1090,53 @@ export default function LandingPage() {
             <div className="links">
               <a
                 className="lnk"
-                href={`${GITHUB_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`}
               >
                 Apple Silicon (M1/M2/M3/M4)<span>.dmg .zip</span>
               </a>
               <a
                 className="lnk"
-                href={`${GITHUB_BASE}ILoveBesi-POS-macOS-Intel.zip`}
+                href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-macOS-Intel.zip`}
               >
                 Intel Mac<span>.dmg .zip</span>
+              </a>
+            </div>
+          </div>
+
+          <div
+            className={`panel ${activeTab === "android" ? "on" : ""}`}
+            role="tabpanel"
+          >
+            <div>
+              <h3>ILuvBesi Mobile untuk Android</h3>
+              <p>
+                Aplikasi dashboard khusus pemilik toko (owner) berbasis Android. Pantau omzet realtime,
+                riwayat nota penjualan kasir, ubah stok gudang &amp; HPP barang, dan pantau tagihan tempo piutang langsung dari smartphone Anda.
+              </p>
+              <div className="files">
+                <b>Spesifikasi Berkas Android</b>
+                <ul>
+                  <li>Format Paket: Berkas Instalasi Mandiri (.APK)</li>
+                  <li>Versi Rilis: v1.1.0 Standalone APK</li>
+                  <li>Kompatibilitas: Android 8.0 (Oreo) ke atas</li>
+                  <li>Fitur: Sinkronisasi database Supabase realtime, tanpa perantara server</li>
+                </ul>
+              </div>
+            </div>
+            <div className="links">
+              <a
+                className="lnk f"
+                href={GITHUB_MOBILE_APK}
+              >
+                Unduh ILuvBesi Mobile (.APK)<span>v1.1.0 .apk</span>
+              </a>
+              <a
+                className="lnk"
+                href="https://github.com/kikiexe/ILoveBesi-mobile/releases"
+                target="_blank"
+                rel="noopener"
+              >
+                Halaman Rilis GitHub Mobile<span>Semua Rilis APK</span>
               </a>
             </div>
           </div>
