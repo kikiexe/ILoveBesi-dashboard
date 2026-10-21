@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/utils/currency";
 import { receivablePaymentSchema } from "@/schemas/receivable.schema";
+import { exportSalesReportToExcel } from "@/utils/exportExcel";
+import { generateReceiptPdf, generateInvoicePdf } from "@/utils/pdfReceipt";
 import type { Tables } from "@/types/database.types";
 
 type Sale = Tables<"sales">;
@@ -228,14 +230,92 @@ export default function SalesPage() {
     }
   };
 
+  const handlePrintReceiptPdf = () => {
+    if (!selectedSaleDetail) return;
+    const s = selectedSaleDetail.sale;
+    generateReceiptPdf({
+      invoice_number: s.invoice_number,
+      sale_date: s.sale_date,
+      customer_name: s.customer_name,
+      cashier_name: s.cashier_name || "Kasir",
+      payment_type: s.payment_type,
+      payment_status: s.payment_status,
+      subtotal_amount: Number(s.subtotal_amount),
+      discount_amount: Number(s.discount_amount),
+      tax_amount: Number(s.tax_amount || 0),
+      grand_total: Number(s.grand_total),
+      paid_amount: Number(s.paid_amount),
+      remaining_debt: Number(s.remaining_debt),
+      notes: s.notes,
+      items: selectedSaleDetail.items.map((it) => ({
+        name: it.product_name || "Barang",
+        qty: it.qty,
+        unit_price: Number(it.unit_price),
+        discount_pct: Number(it.discount_pct || 0),
+        subtotal: Number(it.subtotal),
+      })),
+    });
+  };
+
+  const handlePrintInvoicePdf = () => {
+    if (!selectedSaleDetail) return;
+    const s = selectedSaleDetail.sale;
+    generateInvoicePdf({
+      invoice_number: s.invoice_number,
+      sale_date: s.sale_date,
+      customer_name: s.customer_name,
+      cashier_name: s.cashier_name || "Kasir",
+      payment_type: s.payment_type,
+      payment_status: s.payment_status,
+      subtotal_amount: Number(s.subtotal_amount),
+      discount_amount: Number(s.discount_amount),
+      tax_amount: Number(s.tax_amount || 0),
+      grand_total: Number(s.grand_total),
+      paid_amount: Number(s.paid_amount),
+      remaining_debt: Number(s.remaining_debt),
+      notes: s.notes,
+      items: selectedSaleDetail.items.map((it) => ({
+        name: it.product_name || "Barang",
+        qty: it.qty,
+        unit_price: Number(it.unit_price),
+        discount_pct: Number(it.discount_pct || 0),
+        subtotal: Number(it.subtotal),
+      })),
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b border-slate-300 pb-3">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">Piutang & Faktur Penjualan Kasir</h1>
-        <p className="text-xs text-slate-700">
-          Monitoring tagihan kredit pelanggan, histori pembayaran cicilan, dan status pelunasan nota penjualan.
-        </p>
+      {/* Header & Excel Export */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-300 pb-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Piutang & Faktur Penjualan Kasir</h1>
+          <p className="text-xs text-slate-700">
+            Monitoring tagihan kredit pelanggan, histori pembayaran cicilan, dan status pelunasan nota penjualan.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => exportSalesReportToExcel(sales, `Laporan_Penjualan_${statusFilter}`)}
+          disabled={sales.length === 0}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded bg-green-800 px-4 text-xs font-bold text-white hover:bg-green-900 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </svg>
+          Ekspor Laporan Excel (.xlsx)
+        </button>
       </div>
 
       {/* Summary Box: Total Active Debt */}
@@ -486,8 +566,48 @@ export default function SalesPage() {
               </button>
             </div>
 
+            {/* Opsi Cetak Struk & Faktur PDF */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded border border-slate-200 bg-slate-50 p-2.5">
+              <span className="text-xs font-bold text-slate-700">Cetak Dokumen:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintReceiptPdf}
+                  className="h-9 rounded bg-blue-900 px-3.5 text-xs font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                >
+                  Unduh Struk Kasir (PDF)
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintInvoicePdf}
+                  className="h-9 rounded border border-slate-300 bg-white px-3.5 text-xs font-bold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                >
+                  Unduh Faktur A4 (PDF)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="h-9 rounded border border-slate-300 bg-white px-3.5 text-xs font-bold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                >
+                  Cetak (Printer)
+                </button>
+              </div>
+            </div>
+
             {/* Financial Overview */}
-            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 rounded border border-slate-200 bg-slate-50 p-3 text-xs">
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5 rounded border border-slate-200 bg-slate-50 p-3 text-xs">
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-slate-700">Subtotal</span>
+                <span className="font-bold tabular-nums text-slate-900">
+                  {formatRupiah(Number(selectedSaleDetail.sale.subtotal_amount))}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-slate-700">PPN (11%)</span>
+                <span className="font-bold tabular-nums text-blue-900">
+                  {formatRupiah(Number(selectedSaleDetail.sale.tax_amount || 0))}
+                </span>
+              </div>
               <div>
                 <span className="block text-[10px] uppercase font-bold text-slate-700">Total Tagihan</span>
                 <span className="font-bold tabular-nums text-slate-900">
@@ -504,12 +624,6 @@ export default function SalesPage() {
                 <span className="block text-[10px] uppercase font-bold text-slate-700">Sisa Piutang</span>
                 <span className="font-bold tabular-nums text-red-800">
                   {formatRupiah(Number(selectedSaleDetail.sale.remaining_debt))}
-                </span>
-              </div>
-              <div>
-                <span className="block text-[10px] uppercase font-bold text-slate-700">Status</span>
-                <span className="font-bold text-slate-900">
-                  {selectedSaleDetail.sale.payment_status}
                 </span>
               </div>
             </div>

@@ -6,12 +6,26 @@ import { formatRupiah, formatThickness } from "@/utils/currency";
 import {
   productSchema,
   productUpdateSchema,
+  COMMON_PRODUCT_UNITS,
   type ProductFormValues,
   type ProductUpdateFormValues,
 } from "@/schemas/product.schema";
 import type { Tables } from "@/types/database.types";
 
 type Product = Tables<"products">;
+
+const initialAddFormValues: ProductFormValues = {
+  sku: "",
+  name: "",
+  dimension: "",
+  thickness_mm: 0,
+  unit: "BTG",
+  stock_qty: 0,
+  avg_cost_price: 0,
+  sell_price: 0,
+  include_ppn: false,
+  is_active: true,
+};
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -23,17 +37,7 @@ export default function ProductsPage() {
 
   /* Form Add State */
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addFormValues, setAddFormValues] = useState<ProductFormValues>({
-    sku: "",
-    name: "",
-    dimension: "",
-    thickness_mm: 0.8,
-    unit: "BTG",
-    stock_qty: 0,
-    avg_cost_price: 0,
-    sell_price: 0,
-    is_active: true,
-  });
+  const [addFormValues, setAddFormValues] = useState<ProductFormValues>(initialAddFormValues);
   const [addFormError, setAddFormError] = useState<string | null>(null);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
 
@@ -42,8 +46,12 @@ export default function ProductsPage() {
   const [editFormValues, setEditFormValues] = useState<ProductUpdateFormValues>({
     name: "",
     dimension: "",
-    thickness_mm: 0.8,
+    thickness_mm: 0,
+    unit: "BTG",
+    stock_qty: 0,
+    avg_cost_price: 0,
     sell_price: 0,
+    include_ppn: false,
     is_active: true,
   });
   const [editFormError, setEditFormError] = useState<string | null>(null);
@@ -86,18 +94,21 @@ export default function ProductsPage() {
   }, []);
 
   const dimensionsList = Array.from(
-    new Set(products.map((p) => p.dimension).filter(Boolean))
+    new Set(products.map((p) => p.dimension).filter((d): d is string => Boolean(d && d.trim())))
   ).sort();
 
   const filteredProducts = products.filter((p) => {
+    const currentDim = p.dimension ? p.dimension.trim() : "";
     const matchesDimension =
-      dimensionFilter === "all" || p.dimension.toLowerCase() === dimensionFilter.toLowerCase();
+      dimensionFilter === "all" ||
+      (dimensionFilter === "none" ? !currentDim : currentDim.toLowerCase() === dimensionFilter.toLowerCase());
+
     const query = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !query ||
       p.sku.toLowerCase().includes(query) ||
       p.name.toLowerCase().includes(query) ||
-      p.dimension.toLowerCase().includes(query);
+      currentDim.toLowerCase().includes(query);
 
     return matchesDimension && matchesSearch;
   });
@@ -118,29 +129,20 @@ export default function ProductsPage() {
       const { error } = await supabase.from("products").insert({
         sku: parseResult.data.sku,
         name: parseResult.data.name,
-        dimension: parseResult.data.dimension,
-        thickness_mm: parseResult.data.thickness_mm,
+        dimension: parseResult.data.dimension || "",
+        thickness_mm: parseResult.data.thickness_mm || 0,
         unit: parseResult.data.unit,
         stock_qty: parseResult.data.stock_qty,
         avg_cost_price: parseResult.data.avg_cost_price,
         sell_price: parseResult.data.sell_price,
+        include_ppn: parseResult.data.include_ppn,
         is_active: parseResult.data.is_active,
       });
 
       if (error) throw new Error(error.message);
 
       setShowAddForm(false);
-      setAddFormValues({
-        sku: "",
-        name: "",
-        dimension: "",
-        thickness_mm: 0.8,
-        unit: "BTG",
-        stock_qty: 0,
-        avg_cost_price: 0,
-        sell_price: 0,
-        is_active: true,
-      });
+      setAddFormValues(initialAddFormValues);
       await loadProducts();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Gagal menyimpan varian baru";
@@ -154,9 +156,13 @@ export default function ProductsPage() {
     setEditingProduct(p);
     setEditFormValues({
       name: p.name,
-      dimension: p.dimension,
-      thickness_mm: Number(p.thickness_mm),
-      sell_price: Number(p.sell_price),
+      dimension: p.dimension || "",
+      thickness_mm: Number(p.thickness_mm) || 0,
+      unit: p.unit || "BTG",
+      stock_qty: Number(p.stock_qty) || 0,
+      avg_cost_price: Number(p.avg_cost_price) || 0,
+      sell_price: Number(p.sell_price) || 0,
+      include_ppn: Boolean((p as { include_ppn?: boolean }).include_ppn),
       is_active: p.is_active,
     });
     setEditFormError(null);
@@ -180,9 +186,13 @@ export default function ProductsPage() {
         .from("products")
         .update({
           name: parseResult.data.name,
-          dimension: parseResult.data.dimension,
-          thickness_mm: parseResult.data.thickness_mm,
+          dimension: parseResult.data.dimension || "",
+          thickness_mm: parseResult.data.thickness_mm || 0,
+          unit: parseResult.data.unit,
+          stock_qty: parseResult.data.stock_qty,
+          avg_cost_price: parseResult.data.avg_cost_price,
           sell_price: parseResult.data.sell_price,
+          include_ppn: parseResult.data.include_ppn,
           is_active: parseResult.data.is_active,
           updated_at: new Date().toISOString(),
         })
@@ -202,11 +212,11 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header & Add Button */}
+      {/* Header and Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-300 pb-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Katalog Stok & Harga</h1>
-          <p className="text-sm text-slate-700">Manajemen ukuran, ketebalan, HPP rata-rata, dan harga jual barang.</p>
+          <p className="text-sm text-slate-700">Manajemen ukuran, ketebalan, HPP rata-rata, PPN, dan stok barang.</p>
         </div>
         <button
           type="button"
@@ -250,7 +260,7 @@ export default function ProductsPage() {
                 id="add-name"
                 type="text"
                 required
-                placeholder="Contoh: Hollow 40x40 1.20mm"
+                placeholder="Contoh: Hollow Galvanis 40x40 atau Kawat Bendrat"
                 value={addFormValues.name}
                 onChange={(e) => setAddFormValues({ ...addFormValues, name: e.target.value })}
                 className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
@@ -258,12 +268,13 @@ export default function ProductsPage() {
             </div>
 
             <div>
-              <label htmlFor="add-dimension" className="block text-xs font-medium text-slate-900">Dimensi Ukuran</label>
+              <label htmlFor="add-dimension" className="block text-xs font-medium text-slate-900">
+                Dimensi Ukuran <span className="text-slate-500 font-normal">(Opsional)</span>
+              </label>
               <input
                 id="add-dimension"
                 type="text"
-                required
-                placeholder="Contoh: 40x40"
+                placeholder="Bisa dikosongkan jika non-profil"
                 value={addFormValues.dimension}
                 onChange={(e) => setAddFormValues({ ...addFormValues, dimension: e.target.value })}
                 className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
@@ -271,23 +282,45 @@ export default function ProductsPage() {
             </div>
 
             <div>
-              <label htmlFor="add-thickness" className="block text-xs font-medium text-slate-900">Tebal (mm)</label>
+              <label htmlFor="add-thickness" className="block text-xs font-medium text-slate-900">
+                Tebal mm <span className="text-slate-500 font-normal">(Opsional, isi 0 jika tidak ada)</span>
+              </label>
               <input
                 id="add-thickness"
                 type="number"
                 step="any"
-                required
-                value={addFormValues.thickness_mm}
+                min="0"
+                placeholder="0"
+                value={addFormValues.thickness_mm || ""}
                 onChange={(e) => setAddFormValues({ ...addFormValues, thickness_mm: parseFloat(e.target.value) || 0 })}
                 className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
               />
             </div>
 
             <div>
-              <label htmlFor="add-stock" className="block text-xs font-medium text-slate-900">Stok Awal (BTG)</label>
+              <label htmlFor="add-unit" className="block text-xs font-medium text-slate-900">Satuan Barang</label>
+              <select
+                id="add-unit"
+                value={addFormValues.unit}
+                onChange={(e) => setAddFormValues({ ...addFormValues, unit: e.target.value })}
+                className="mt-1 h-10 w-full rounded border border-slate-300 bg-white px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+              >
+                {COMMON_PRODUCT_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="add-stock" className="block text-xs font-medium text-slate-900">
+                Stok Awal ({addFormValues.unit})
+              </label>
               <input
                 id="add-stock"
                 type="number"
+                min="0"
                 required
                 value={addFormValues.stock_qty}
                 onChange={(e) => setAddFormValues({ ...addFormValues, stock_qty: parseInt(e.target.value) || 0 })}
@@ -301,6 +334,7 @@ export default function ProductsPage() {
                 id="add-cost"
                 type="number"
                 step="any"
+                min="0"
                 required
                 value={addFormValues.avg_cost_price}
                 onChange={(e) => setAddFormValues({ ...addFormValues, avg_cost_price: parseFloat(e.target.value) || 0 })}
@@ -314,11 +348,25 @@ export default function ProductsPage() {
                 id="add-price"
                 type="number"
                 step="any"
+                min="0"
                 required
                 value={addFormValues.sell_price}
                 onChange={(e) => setAddFormValues({ ...addFormValues, sell_price: parseFloat(e.target.value) || 0 })}
                 className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
               />
+            </div>
+
+            <div className="sm:col-span-2 flex items-center gap-3 pt-2">
+              <input
+                id="add-include-ppn"
+                type="checkbox"
+                checked={addFormValues.include_ppn}
+                onChange={(e) => setAddFormValues({ ...addFormValues, include_ppn: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-900"
+              />
+              <label htmlFor="add-include-ppn" className="text-xs font-medium text-slate-900 select-none cursor-pointer">
+                Harga Jual Sudah Termasuk PPN 11% (Include PPN)
+              </label>
             </div>
 
             <div className="flex items-end sm:col-span-1">
@@ -345,6 +393,7 @@ export default function ProductsPage() {
             className="h-11 w-full sm:w-auto rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
           >
             <option value="all">Semua Dimensi</option>
+            <option value="none">Tanpa Dimensi (Non-Profil)</option>
             {dimensionsList.map((dim) => (
               <option key={dim} value={dim}>
                 {dim}
@@ -399,11 +448,15 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
-              {/* 1. Mobile Card List (Senior-Friendly, High Contrast, Spacious) */}
+              {/* Mobile Card List */}
               <div className="flex flex-col gap-3 md:hidden">
                 {filteredProducts.map((p) => {
                   const margin = Number(p.sell_price) - Number(p.avg_cost_price);
                   const isLowStock = p.stock_qty <= 20;
+                  const itemUnit = p.unit || "BTG";
+                  const hasThickness = Number(p.thickness_mm) > 0;
+                  const hasDimension = Boolean(p.dimension && p.dimension.trim());
+                  const isIncPpn = Boolean((p as { include_ppn?: boolean }).include_ppn);
 
                   return (
                     <div
@@ -419,12 +472,24 @@ export default function ProductsPage() {
                             <span className="font-mono text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
                               {p.sku}
                             </span>
-                            <span className="text-xs font-bold bg-blue-50 text-blue-900 px-2 py-0.5 rounded border border-blue-200">
-                              Dimensi: {p.dimension}
+                            {hasDimension && (
+                              <span className="text-xs font-bold bg-blue-50 text-blue-900 px-2 py-0.5 rounded border border-blue-200">
+                                Dimensi: {p.dimension}
+                              </span>
+                            )}
+                            {hasThickness && (
+                              <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
+                                Tebal: {formatThickness(Number(p.thickness_mm))}
+                              </span>
+                            )}
+                            <span className="text-xs font-bold bg-purple-50 text-purple-900 px-2 py-0.5 rounded border border-purple-200">
+                              {itemUnit}
                             </span>
-                            <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
-                              Tebal: {formatThickness(Number(p.thickness_mm))}
-                            </span>
+                            {isIncPpn && (
+                              <span className="text-xs font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-300">
+                                Inc. PPN
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div>
@@ -444,7 +509,7 @@ export default function ProductsPage() {
                         <div>
                           <span className="block text-xs font-semibold text-slate-700">Stok Gudang</span>
                           <span className={`text-base font-bold tabular-nums ${isLowStock ? "text-red-800" : "text-slate-900"}`}>
-                            {p.stock_qty} BTG
+                            {p.stock_qty} {itemUnit}
                           </span>
                           {isLowStock && (
                             <span className="block text-[11px] font-bold text-red-700">Stok Menipis</span>
@@ -475,26 +540,28 @@ export default function ProductsPage() {
                         onClick={() => handleStartEdit(p)}
                         className="h-11 w-full rounded border-2 border-blue-900 bg-blue-900 text-sm font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
                       >
-                        Ubah Harga Jual / Edit Varian
+                        Ubah Stok, HPP & Harga Jual
                       </button>
                     </div>
                   );
                 })}
               </div>
 
-              {/* 2. Desktop Table View (>= md, Clean Horizontal Scroll) */}
+              {/* Desktop Table View */}
               <div className="hidden md:block rounded-md border border-slate-300 bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[850px]">
+                  <table className="w-full text-left text-sm min-w-[950px]">
                     <thead>
                       <tr className="border-b border-slate-300 bg-slate-100 font-semibold text-slate-900">
                         <th className="p-3.5 whitespace-nowrap">SKU</th>
-                        <th className="p-3.5">Nama & Ukuran</th>
+                        <th className="p-3.5">Nama & Spesifikasi</th>
+                        <th className="p-3.5 text-center whitespace-nowrap">Satuan</th>
                         <th className="p-3.5 text-right whitespace-nowrap">Tebal</th>
                         <th className="p-3.5 text-right whitespace-nowrap">Stok Gudang</th>
                         <th className="p-3.5 text-right whitespace-nowrap">HPP Rata-Rata</th>
                         <th className="p-3.5 text-right whitespace-nowrap">Harga Jual</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">Margin / BTG</th>
+                        <th className="p-3.5 text-right whitespace-nowrap">Margin Untung</th>
+                        <th className="p-3.5 text-center whitespace-nowrap">PPN</th>
                         <th className="p-3.5 text-center whitespace-nowrap">Status</th>
                         <th className="p-3.5 text-center whitespace-nowrap">Aksi</th>
                       </tr>
@@ -503,21 +570,36 @@ export default function ProductsPage() {
                       {filteredProducts.map((p) => {
                         const margin = Number(p.sell_price) - Number(p.avg_cost_price);
                         const isLowStock = p.stock_qty <= 20;
+                        const itemUnit = p.unit || "BTG";
+                        const hasThickness = Number(p.thickness_mm) > 0;
+                        const hasDimension = Boolean(p.dimension && p.dimension.trim());
+                        const isIncPpn = Boolean((p as { include_ppn?: boolean }).include_ppn);
 
                         return (
                           <tr key={p.id} className="hover:bg-slate-50">
                             <td className="p-3.5 font-mono font-medium text-slate-900 whitespace-nowrap">{p.sku}</td>
                             <td className="p-3.5 text-slate-900 font-medium">
                               {p.name}
-                              <span className="block text-xs text-slate-700 font-mono">
-                                Dimensi: {p.dimension}
+                              {hasDimension ? (
+                                <span className="block text-xs text-slate-700 font-mono">
+                                  Dimensi: {p.dimension}
+                                </span>
+                              ) : (
+                                <span className="block text-xs text-slate-400 italic">
+                                  Non-profil
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3.5 text-center whitespace-nowrap">
+                              <span className="font-semibold text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
+                                {itemUnit}
                               </span>
                             </td>
                             <td className="p-3.5 text-right tabular-nums text-slate-900 whitespace-nowrap">
-                              {formatThickness(Number(p.thickness_mm))}
+                              {hasThickness ? formatThickness(Number(p.thickness_mm)) : "-"}
                             </td>
                             <td className={`p-3.5 text-right tabular-nums font-bold whitespace-nowrap ${isLowStock ? "text-red-800" : "text-slate-900"}`}>
-                              {p.stock_qty} BTG
+                              {p.stock_qty} {itemUnit}
                             </td>
                             <td className="p-3.5 text-right tabular-nums text-slate-700 whitespace-nowrap">
                               {formatRupiah(Number(p.avg_cost_price))}
@@ -527,6 +609,17 @@ export default function ProductsPage() {
                             </td>
                             <td className="p-3.5 text-right tabular-nums font-semibold text-green-800 whitespace-nowrap">
                               {formatRupiah(margin)}
+                            </td>
+                            <td className="p-3.5 text-center whitespace-nowrap">
+                              {isIncPpn ? (
+                                <span className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-900">
+                                  Inc. PPN
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-500">
+                                  Non-PPN
+                                </span>
+                              )}
                             </td>
                             <td className="p-3.5 text-center whitespace-nowrap">
                               {p.is_active ? (
@@ -545,7 +638,7 @@ export default function ProductsPage() {
                                 onClick={() => handleStartEdit(p)}
                                 className="h-10 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-blue-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
                               >
-                                Edit
+                                Edit Data
                               </button>
                             </td>
                           </tr>
@@ -560,17 +653,17 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Modal Edit Produk / Harga Jual */}
+      {/* Modal Edit Produk / Stok / HPP / PPN */}
       {editingProduct && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 overflow-y-auto"
         >
-          <div className="w-full max-w-lg rounded-md border border-slate-300 bg-white p-6 shadow-md">
+          <div className="w-full max-w-lg rounded-md border border-slate-300 bg-white p-6 shadow-md max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Edit Data Produk</h3>
+                <h3 className="text-sm font-bold text-slate-900">Edit Data Produk & Stok</h3>
                 <p className="text-xs text-slate-700 font-mono">SKU: {editingProduct.sku}</p>
               </div>
               <button
@@ -603,11 +696,13 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="edit-dimension" className="block text-xs font-medium text-slate-900">Dimensi Ukuran</label>
+                  <label htmlFor="edit-dimension" className="block text-xs font-medium text-slate-900">
+                    Dimensi Ukuran <span className="text-slate-500 font-normal">(Opsional)</span>
+                  </label>
                   <input
                     id="edit-dimension"
                     type="text"
-                    required
+                    placeholder="Bisa dikosongkan"
                     value={editFormValues.dimension}
                     onChange={(e) => setEditFormValues({ ...editFormValues, dimension: e.target.value })}
                     className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
@@ -615,14 +710,63 @@ export default function ProductsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="edit-thickness" className="block text-xs font-medium text-slate-900">Tebal (mm)</label>
+                  <label htmlFor="edit-thickness" className="block text-xs font-medium text-slate-900">
+                    Tebal mm <span className="text-slate-500 font-normal">(Opsional / 0)</span>
+                  </label>
                   <input
                     id="edit-thickness"
                     type="number"
                     step="any"
-                    required
-                    value={editFormValues.thickness_mm}
+                    min="0"
+                    value={editFormValues.thickness_mm || ""}
                     onChange={(e) => setEditFormValues({ ...editFormValues, thickness_mm: parseFloat(e.target.value) || 0 })}
+                    className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="edit-unit" className="block text-xs font-medium text-slate-900">Satuan Barang</label>
+                <select
+                  id="edit-unit"
+                  value={editFormValues.unit}
+                  onChange={(e) => setEditFormValues({ ...editFormValues, unit: e.target.value })}
+                  className="mt-1 h-10 w-full rounded border border-slate-300 bg-white px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                >
+                  {COMMON_PRODUCT_UNITS.map((u) => (
+                    <option key={u.value} value={u.value}>
+                      {u.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit-stock" className="block text-xs font-medium text-slate-900">
+                    Stok Gudang ({editFormValues.unit})
+                  </label>
+                  <input
+                    id="edit-stock"
+                    type="number"
+                    min="0"
+                    required
+                    value={editFormValues.stock_qty}
+                    onChange={(e) => setEditFormValues({ ...editFormValues, stock_qty: parseInt(e.target.value) || 0 })}
+                    className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-cost" className="block text-xs font-medium text-slate-900">HPP Rata-Rata (Rp)</label>
+                  <input
+                    id="edit-cost"
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    value={editFormValues.avg_cost_price}
+                    onChange={(e) => setEditFormValues({ ...editFormValues, avg_cost_price: parseFloat(e.target.value) || 0 })}
                     className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
                   />
                 </div>
@@ -634,11 +778,25 @@ export default function ProductsPage() {
                   id="edit-price"
                   type="number"
                   step="any"
+                  min="0"
                   required
                   value={editFormValues.sell_price}
                   onChange={(e) => setEditFormValues({ ...editFormValues, sell_price: parseFloat(e.target.value) || 0 })}
                   className="mt-1 h-10 w-full rounded border border-slate-300 px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
                 />
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <input
+                  id="edit-include-ppn"
+                  type="checkbox"
+                  checked={editFormValues.include_ppn}
+                  onChange={(e) => setEditFormValues({ ...editFormValues, include_ppn: e.target.checked })}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-900"
+                />
+                <label htmlFor="edit-include-ppn" className="text-xs font-medium text-slate-900 select-none cursor-pointer">
+                  Harga Jual Sudah Termasuk PPN 11% (Include PPN)
+                </label>
               </div>
 
               <div>

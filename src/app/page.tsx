@@ -779,7 +779,7 @@ export default function LandingPage() {
       <header>
         <div className="wrap nav">
           <Link className="brand" href="#">
-            ILoveBesi <span>POS</span>
+            ILuvBesi <span>POS</span>
           </Link>
           {isLoggedIn ? (
             <Link href="/dashboard" className="btn solid">
@@ -842,7 +842,7 @@ export default function LandingPage() {
 
           <div className="win" aria-label="Pratinjau antarmuka kasir">
             <div className="win-h">
-              <span>ILoveBesi POS Desktop v1.0.3 [Kasir: Budi - Shift Aktif]</span>
+              <span>ILuvBesi POS Desktop v1.0.3 [Kasir: Budi - Shift Aktif]</span>
               <span className="on">ONLINE</span>
             </div>
             <div className="win-b">
@@ -981,8 +981,8 @@ export default function LandingPage() {
               <div className="files">
                 <b>Isi paket .ZIP</b>
                 <ul>
-                  <li>ILoveBesi POS Setup .exe (NSIS)</li>
-                  <li>ILoveBesi POS Setup .msi</li>
+                  <li>ILuvBesi POS Setup .exe (NSIS)</li>
+                  <li>ILuvBesi POS Setup .msi</li>
                   <li>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</li>
                 </ul>
               </div>
@@ -1111,7 +1111,7 @@ export default function LandingPage() {
       <footer>
         <div className="wrap foot">
           <div>
-            <strong>ILoveBesi POS</strong> - Sistem kasir &amp; manajemen toko besi
+            <strong>ILuvBesi POS</strong> - Sistem kasir &amp; manajemen toko besi
             hollow galvanis.
           </div>
           <nav>

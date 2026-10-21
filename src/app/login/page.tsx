@@ -80,7 +80,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md rounded-md border border-slate-300 bg-white p-6 shadow-sm">
         <div className="mb-6 border-b border-slate-200 pb-4">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">ILoveBesi</h1>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">ILuvBesi</h1>
           <p className="text-sm font-medium text-slate-700">Masuk Dashboard Pemilik Toko</p>
         </div>
 

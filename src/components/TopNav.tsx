@@ -140,7 +140,7 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
       <header className="sticky top-0 z-40 border-b border-slate-300 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-slate-900">ILoveBesi</span>
+            <span className="text-lg font-bold tracking-tight text-slate-900">ILuvBesi</span>
             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 border border-slate-200">
               Manajemen Toko
             </span>

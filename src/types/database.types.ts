@@ -172,12 +172,13 @@ export type Database = {
           stock_qty: number
           thickness_mm: number
           unit: string
+          include_ppn?: boolean
           updated_at: string
         }
         Insert: {
           avg_cost_price?: number
           created_at?: string
-          dimension: string
+          dimension?: string
           id?: string
           is_active?: boolean
           name: string
@@ -185,8 +186,9 @@ export type Database = {
           sell_price?: number
           sku: string
           stock_qty?: number
-          thickness_mm: number
+          thickness_mm?: number
           unit?: string
+          include_ppn?: boolean
           updated_at?: string
         }
         Update: {
@@ -202,6 +204,7 @@ export type Database = {
           stock_qty?: number
           thickness_mm?: number
           unit?: string
+          include_ppn?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -554,6 +557,7 @@ export type Database = {
         Row: {
           dimension: string | null
           id: string | null
+          include_ppn: boolean | null
           is_active: boolean | null
           name: string | null
           owner_id: string | null
@@ -567,6 +571,7 @@ export type Database = {
         Insert: {
           dimension?: string | null
           id?: string | null
+          include_ppn?: boolean | null
           is_active?: boolean | null
           name?: string | null
           owner_id?: string | null
@@ -580,6 +585,7 @@ export type Database = {
         Update: {
           dimension?: string | null
           id?: string | null
+          include_ppn?: boolean | null
           is_active?: boolean | null
           name?: string | null
           owner_id?: string | null
