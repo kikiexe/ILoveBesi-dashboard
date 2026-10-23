@@ -117,17 +117,19 @@ export function generateReceiptPdf(data: ReceiptData) {
     y += 3.5;
   }
 
-  if (data.tax_amount > 0) {
-    doc.text("PPN (11%):", left, y);
-    doc.text(formatRupiah(data.tax_amount), right, y, { align: "right" });
-    y += 3.5;
-  }
-
   doc.setFont("courier", "bold");
   doc.setFontSize(9);
   doc.text("GRAND TOTAL:", left, y);
   doc.text(formatRupiah(data.grand_total), right, y, { align: "right" });
   y += 4;
+
+  if (data.tax_amount > 0) {
+    doc.setFont("courier", "normal");
+    doc.setFontSize(7.5);
+    doc.text("(Termasuk PPN 11%):", left, y);
+    doc.text(formatRupiah(data.tax_amount), right, y, { align: "right" });
+    y += 3.5;
+  }
 
   doc.setFont("courier", "normal");
   doc.setFontSize(8);
@@ -277,17 +279,19 @@ export function generateInvoicePdf(data: ReceiptData) {
     y += 5;
   }
 
-  if (data.tax_amount > 0) {
-    doc.text("PPN (11%):", summaryX, y);
-    doc.text(formatRupiah(data.tax_amount), 193, y, { align: "right" });
-    y += 5;
-  }
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text("Grand Total:", summaryX, y);
   doc.text(formatRupiah(data.grand_total), 193, y, { align: "right" });
-  y += 6;
+  y += 5;
+
+  if (data.tax_amount > 0) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.text("(Termasuk PPN 11%):", summaryX, y);
+    doc.text(formatRupiah(data.tax_amount), 193, y, { align: "right" });
+    y += 5;
+  }
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
