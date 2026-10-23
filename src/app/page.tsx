@@ -20,21 +20,21 @@ const GITHUB_MOBILE_APK =
 const OS_CONFIGS: Record<"win" | "mac" | "linux" | "android", OSConfig> = {
   win: {
     label: "Terdeteksi: Windows 64-bit",
-    ver: "v1.1.4 .ZIP",
+    ver: "v1.1.5 .ZIP",
     btnText: "Unduh Paket Windows (.zip)",
     btnSub: "Termasuk installer .exe (NSIS), .msi & panduan instalasi TXT",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`,
   },
   mac: {
     label: "Terdeteksi: macOS",
-    ver: "v1.1.4 .DMG .ZIP",
+    ver: "v1.1.5 .DMG .ZIP",
     btnText: "Unduh untuk Apple Silicon (.zip)",
     btnSub: "Pakai Intel Mac? Pilih di tab macOS",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`,
   },
   linux: {
     label: "Terdeteksi: Linux",
-    ver: "v1.1.4 .AppImage .ZIP",
+    ver: "v1.1.5 .AppImage .ZIP",
     btnText: "Unduh Universal Portable (.zip)",
     btnSub: "Berisi AppImage & panduan TXT. Paket .deb dan .rpm ada di tab Linux",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-AppImage.zip`,
@@ -808,7 +808,7 @@ export default function LandingPage() {
       <div className="hero">
         <div className="wrap hero-grid">
           <div>
-            <span className="tag">v1.1.4 stabil, multi-tenant</span>
+            <span className="tag">v1.1.5 stabil, multi-tenant</span>
             <h1>Kasir secepat ketikan, untuk toko besi &amp; baja.</h1>
             <p className="lead">
               Dirancang khusus untuk transaksi pipa hollow, plat baja, dan besi
@@ -852,7 +852,7 @@ export default function LandingPage() {
 
           <div className="win" aria-label="Pratinjau antarmuka kasir">
             <div className="win-h">
-              <span>ILuvBesi POS Desktop v1.1.4 [Kasir: Budi - Shift Aktif]</span>
+              <span>ILuvBesi POS Desktop v1.1.5 [Kasir: Budi - Shift Aktif]</span>
               <span className="on">ONLINE</span>
             </div>
             <div className="win-b">
@@ -1027,7 +1027,7 @@ export default function LandingPage() {
                 className="lnk f"
                 href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`}
               >
-                Unduh Paket Windows (.zip)<span>64-bit (v1.1.4)</span>
+                Unduh Paket Windows (.zip)<span>64-bit (v1.1.5)</span>
               </a>
             </div>
           </div>
