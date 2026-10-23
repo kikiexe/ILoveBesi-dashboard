@@ -41,7 +41,7 @@ const OS_CONFIGS: Record<"win" | "mac" | "linux" | "android", OSConfig> = {
   },
   android: {
     label: "Terdeteksi: Android Smartphone",
-    ver: "v1.1.4 .APK",
+    ver: "v1.1.1 .APK",
     btnText: "Unduh ILuvBesi Mobile (.apk)",
     btnSub: "Dashboard realtime pemilik toko untuk Android",
     downloadUrl: GITHUB_MOBILE_APK,
@@ -944,7 +944,7 @@ export default function LandingPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <h3 style={{ color: '#1e3a8a', margin: 0 }}>Dashboard Mobile Android</h3>
                 <span style={{ fontSize: '0.72rem', fontWeight: 800, background: '#1e3a8a', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                  BARU v1.1.3
+                  BARU v1.1.1
                 </span>
               </div>
               <p style={{ color: '#1e40af', marginBottom: '0.8rem' }}>
@@ -1117,7 +1117,7 @@ export default function LandingPage() {
                 <b>Spesifikasi Berkas Android</b>
                 <ul>
                   <li>Format Paket: Berkas Instalasi Mandiri (.APK)</li>
-                  <li>Versi Rilis: v1.1.3 Standalone APK</li>
+                  <li>Versi Rilis: v1.1.1 Standalone APK</li>
                   <li>Kompatibilitas: Android 8.0 (Oreo) ke atas</li>
                   <li>Fitur: Sinkronisasi database Supabase realtime, tanpa perantara server</li>
                 </ul>
@@ -1128,7 +1128,7 @@ export default function LandingPage() {
                 className="lnk f"
                 href={GITHUB_MOBILE_APK}
               >
-                Unduh ILuvBesi Mobile (.APK)<span>v1.1.3 .apk</span>
+                Unduh ILuvBesi Mobile (.APK)<span>v1.1.1 .apk</span>
               </a>
               <a
                 className="lnk"
