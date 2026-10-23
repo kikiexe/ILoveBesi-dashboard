@@ -20,28 +20,28 @@ const GITHUB_MOBILE_APK =
 const OS_CONFIGS: Record<"win" | "mac" | "linux" | "android", OSConfig> = {
   win: {
     label: "Terdeteksi: Windows 64-bit",
-    ver: "v1.1.0 .ZIP",
+    ver: "v1.1.1 .ZIP",
     btnText: "Unduh Paket Windows (.zip)",
     btnSub: "Termasuk installer .exe (NSIS), .msi & panduan instalasi TXT",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`,
   },
   mac: {
     label: "Terdeteksi: macOS",
-    ver: "v1.1.0 .DMG .ZIP",
+    ver: "v1.1.1 .DMG .ZIP",
     btnText: "Unduh untuk Apple Silicon (.zip)",
     btnSub: "Pakai Intel Mac? Pilih di tab macOS",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-macOS-Apple-Silicon.zip`,
   },
   linux: {
     label: "Terdeteksi: Linux",
-    ver: "v1.1.0 .AppImage .ZIP",
+    ver: "v1.1.1 .AppImage .ZIP",
     btnText: "Unduh Universal Portable (.zip)",
     btnSub: "Berisi AppImage & panduan TXT. Paket .deb dan .rpm ada di tab Linux",
     downloadUrl: `${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Linux-AppImage.zip`,
   },
   android: {
     label: "Terdeteksi: Android Smartphone",
-    ver: "v1.1.0 .APK",
+    ver: "v1.1.1 .APK",
     btnText: "Unduh ILuvBesi Mobile (.apk)",
     btnSub: "Dashboard realtime pemilik toko untuk Android",
     downloadUrl: GITHUB_MOBILE_APK,
@@ -808,7 +808,7 @@ export default function LandingPage() {
       <div className="hero">
         <div className="wrap hero-grid">
           <div>
-            <span className="tag">v1.1.0 stabil, multi-tenant</span>
+            <span className="tag">v1.1.1 stabil, multi-tenant</span>
             <h1>Kasir secepat ketikan, untuk toko besi &amp; baja.</h1>
             <p className="lead">
               Dirancang khusus untuk transaksi pipa hollow, plat baja, dan besi
@@ -842,7 +842,7 @@ export default function LandingPage() {
               <p>
                 Paket instalasi menyertakan{" "}
                 <strong>PANDUAN-INSTALASI-DAN-PENGGUNAAN.txt</strong> berisi petunjuk
-                lengkap shortcut kasir F1-F11 dan panduan operasional.
+                lengkap shortcut kasir F1-F12 dan panduan operasional.
               </p>
               <div className="alt">
                 <a href="#unduh">Sistem operasi lain atau Android APK? Lihat semua unduhan</a>
@@ -852,7 +852,7 @@ export default function LandingPage() {
 
           <div className="win" aria-label="Pratinjau antarmuka kasir">
             <div className="win-h">
-              <span>ILuvBesi POS Desktop v1.1.0 [Kasir: Budi - Shift Aktif]</span>
+              <span>ILuvBesi POS Desktop v1.1.1 [Kasir: Budi - Shift Aktif]</span>
               <span className="on">ONLINE</span>
             </div>
             <div className="win-b">
@@ -944,7 +944,7 @@ export default function LandingPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <h3 style={{ color: '#1e3a8a', margin: 0 }}>Dashboard Mobile Android</h3>
                 <span style={{ fontSize: '0.72rem', fontWeight: 800, background: '#1e3a8a', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                  BARU v1.1.0
+                  BARU v1.1.1
                 </span>
               </div>
               <p style={{ color: '#1e40af', marginBottom: '0.8rem' }}>
@@ -1027,7 +1027,7 @@ export default function LandingPage() {
                 className="lnk f"
                 href={`${GITHUB_DESKTOP_BASE}ILoveBesi-POS-Windows-64bit.zip`}
               >
-                Unduh Paket Windows (.zip)<span>64-bit (v1.1.0)</span>
+                Unduh Paket Windows (.zip)<span>64-bit (v1.1.1)</span>
               </a>
             </div>
           </div>
@@ -1117,7 +1117,7 @@ export default function LandingPage() {
                 <b>Spesifikasi Berkas Android</b>
                 <ul>
                   <li>Format Paket: Berkas Instalasi Mandiri (.APK)</li>
-                  <li>Versi Rilis: v1.1.0 Standalone APK</li>
+                  <li>Versi Rilis: v1.1.1 Standalone APK</li>
                   <li>Kompatibilitas: Android 8.0 (Oreo) ke atas</li>
                   <li>Fitur: Sinkronisasi database Supabase realtime, tanpa perantara server</li>
                 </ul>
@@ -1128,7 +1128,7 @@ export default function LandingPage() {
                 className="lnk f"
                 href={GITHUB_MOBILE_APK}
               >
-                Unduh ILuvBesi Mobile (.APK)<span>v1.1.0 .apk</span>
+                Unduh ILuvBesi Mobile (.APK)<span>v1.1.1 .apk</span>
               </a>
               <a
                 className="lnk"
@@ -1173,7 +1173,7 @@ export default function LandingPage() {
               <p>
                 Ketik nama kasir jaga dan uang modal awal di laci kasir. Tekan
                 [Enter] untuk membuka meja kasir dan mulai melayani dengan pintasan
-                F1-F11.
+                F1-F12.
               </p>
             </div>
           </div>
