@@ -52,7 +52,7 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-slate-50">
       <TopNav userEmail={user.email} userName={profile.full_name} />
-      <main className="mx-auto max-w-7xl p-4 pb-28 sm:p-6 sm:pb-6">{children}</main>
+      <main className="mx-auto max-w-[1600px] p-4 pb-28 sm:p-6 sm:pb-6">{children}</main>
     </div>
   );
 }

@@ -448,8 +448,8 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
-              {/* Mobile Card List */}
-              <div className="flex flex-col gap-3 md:hidden">
+              {/* Mobile & Tablet Card List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
                 {filteredProducts.map((p) => {
                   const margin = Number(p.sell_price) - Number(p.avg_cost_price);
                   const isLowStock = p.stock_qty <= 20;
@@ -548,22 +548,22 @@ export default function ProductsPage() {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden md:block rounded-md border border-slate-300 bg-white shadow-sm overflow-hidden">
+              <div className="hidden lg:block rounded-md border border-slate-300 bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[950px]">
+                  <table className="w-full text-left text-xs xl:text-sm">
                     <thead>
                       <tr className="border-b border-slate-300 bg-slate-100 font-semibold text-slate-900">
-                        <th className="p-3.5 whitespace-nowrap">SKU</th>
-                        <th className="p-3.5">Nama & Spesifikasi</th>
-                        <th className="p-3.5 text-center whitespace-nowrap">Satuan</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">Tebal</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">Stok Gudang</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">HPP Rata-Rata</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">Harga Jual</th>
-                        <th className="p-3.5 text-right whitespace-nowrap">Margin Untung</th>
-                        <th className="p-3.5 text-center whitespace-nowrap">PPN</th>
-                        <th className="p-3.5 text-center whitespace-nowrap">Status</th>
-                        <th className="p-3.5 text-center whitespace-nowrap">Aksi</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 whitespace-nowrap">SKU</th>
+                        <th className="px-2.5 py-3 xl:px-3.5">Nama & Spesifikasi</th>
+                        <th className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">Satuan</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 text-right whitespace-nowrap">Tebal</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 text-right whitespace-nowrap">Stok Gudang</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 text-right whitespace-nowrap">HPP Rata-Rata</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 text-right whitespace-nowrap">Harga Jual</th>
+                        <th className="px-2.5 py-3 xl:px-3.5 text-right whitespace-nowrap">Margin Untung</th>
+                        <th className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">PPN</th>
+                        <th className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">Status</th>
+                        <th className="sticky right-0 z-10 border-l border-slate-300 bg-slate-100 px-3 py-3 text-center whitespace-nowrap">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
@@ -576,9 +576,9 @@ export default function ProductsPage() {
                         const isIncPpn = Boolean((p as { include_ppn?: boolean }).include_ppn);
 
                         return (
-                          <tr key={p.id} className="hover:bg-slate-50">
-                            <td className="p-3.5 font-mono font-medium text-slate-900 whitespace-nowrap">{p.sku}</td>
-                            <td className="p-3.5 text-slate-900 font-medium">
+                          <tr key={p.id} className="group hover:bg-slate-50">
+                            <td className="px-2.5 py-3 xl:px-3.5 font-mono font-medium text-slate-900 break-words max-w-[140px] xl:max-w-[180px]">{p.sku}</td>
+                            <td className="px-2.5 py-3 xl:px-3.5 text-slate-900 font-medium">
                               {p.name}
                               {hasDimension ? (
                                 <span className="block text-xs text-slate-700 font-mono">
@@ -590,27 +590,27 @@ export default function ProductsPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="p-3.5 text-center whitespace-nowrap">
+                            <td className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">
                               <span className="font-semibold text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
                                 {itemUnit}
                               </span>
                             </td>
-                            <td className="p-3.5 text-right tabular-nums text-slate-900 whitespace-nowrap">
+                            <td className="px-2.5 py-3 xl:px-3.5 text-right tabular-nums text-slate-900 whitespace-nowrap">
                               {hasThickness ? formatThickness(Number(p.thickness_mm)) : "-"}
                             </td>
-                            <td className={`p-3.5 text-right tabular-nums font-bold whitespace-nowrap ${isLowStock ? "text-red-800" : "text-slate-900"}`}>
+                            <td className={`px-2.5 py-3 xl:px-3.5 text-right tabular-nums font-bold whitespace-nowrap ${isLowStock ? "text-red-800" : "text-slate-900"}`}>
                               {p.stock_qty} {itemUnit}
                             </td>
-                            <td className="p-3.5 text-right tabular-nums text-slate-700 whitespace-nowrap">
+                            <td className="px-2.5 py-3 xl:px-3.5 text-right tabular-nums text-slate-700 whitespace-nowrap">
                               {formatRupiah(Number(p.avg_cost_price))}
                             </td>
-                            <td className="p-3.5 text-right tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                            <td className="px-2.5 py-3 xl:px-3.5 text-right tabular-nums font-bold text-slate-900 whitespace-nowrap">
                               {formatRupiah(Number(p.sell_price))}
                             </td>
-                            <td className="p-3.5 text-right tabular-nums font-semibold text-green-800 whitespace-nowrap">
+                            <td className="px-2.5 py-3 xl:px-3.5 text-right tabular-nums font-semibold text-green-800 whitespace-nowrap">
                               {formatRupiah(margin)}
                             </td>
-                            <td className="p-3.5 text-center whitespace-nowrap">
+                            <td className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">
                               {isIncPpn ? (
                                 <span className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-900">
                                   Inc. PPN
@@ -621,7 +621,7 @@ export default function ProductsPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="p-3.5 text-center whitespace-nowrap">
+                            <td className="px-2 py-3 xl:px-3 text-center whitespace-nowrap">
                               {p.is_active ? (
                                 <span className="rounded border border-green-300 bg-green-100 px-2 py-0.5 text-xs font-bold text-green-800">
                                   Aktif
@@ -632,11 +632,11 @@ export default function ProductsPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="p-3.5 text-center whitespace-nowrap">
+                            <td className="sticky right-0 z-10 border-l border-slate-200 bg-white px-3 py-3 text-center whitespace-nowrap group-hover:bg-slate-50">
                               <button
                                 type="button"
                                 onClick={() => handleStartEdit(p)}
-                                className="h-10 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-blue-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                                className="h-11 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-blue-900 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
                               >
                                 Edit Data
                               </button>

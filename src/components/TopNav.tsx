@@ -138,7 +138,7 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
     <>
       {/* Top Header: Brand & Akun (Desktop & Mobile) */}
       <header className="sticky top-0 z-40 border-b border-slate-300 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-2 sm:px-6">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight text-slate-900">ILuvBesi</span>
             <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 border border-slate-200">
@@ -183,7 +183,7 @@ export default function TopNav({ userEmail, userName }: TopNavProps) {
 
         {/* Tab Navigasi Desktop: Ditampilkan di atas layar lebar (>= md) */}
         <nav aria-label="Navigasi Desktop" className="hidden md:block border-t border-slate-200 bg-slate-50">
-          <div className="mx-auto flex max-w-7xl overflow-x-auto px-4 sm:px-6 whitespace-nowrap">
+          <div className="mx-auto flex max-w-[1600px] overflow-x-auto px-4 sm:px-6 whitespace-nowrap">
             {navItems.map((item) => {
               const isActive =
                 item.href === "/dashboard"
