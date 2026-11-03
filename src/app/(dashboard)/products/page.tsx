@@ -155,7 +155,10 @@ export default function ProductsPage() {
       setAddFormValues(initialAddFormValues);
       await loadProducts();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Gagal menyimpan varian baru";
+      let msg = err instanceof Error ? err.message : "Gagal menyimpan varian baru";
+      if (msg.includes("uq_products_owner_sku") || msg.toLowerCase().includes("unique constraint") || msg.toLowerCase().includes("already exists")) {
+        msg = `SKU "${parseResult.data.sku}" sudah pernah terdaftar di database. Jika produk ini sebelumnya pernah dihapus/diarsipkan, silakan ubah Filter Status ke "Diarsipkan (Terhapus)", cari produk tersebut, lalu klik "Pulihkan".`;
+      }
       setAddFormError(msg);
     } finally {
       setIsSubmittingAdd(false);
