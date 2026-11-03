@@ -30,6 +30,7 @@ const initialAddFormValues: ProductFormValues = {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [dimensionFilter, setDimensionFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"active" | "archived" | "all">("active");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +57,10 @@ export default function ProductsPage() {
   });
   const [editFormError, setEditFormError] = useState<string | null>(null);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+  /* Modal Konfirmasi Hapus (Soft Delete) */
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
 
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
@@ -87,6 +92,7 @@ export default function ProductsPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setEditingProduct(null);
+        setDeletingProduct(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -103,6 +109,10 @@ export default function ProductsPage() {
       dimensionFilter === "all" ||
       (dimensionFilter === "none" ? !currentDim : currentDim.toLowerCase() === dimensionFilter.toLowerCase());
 
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" ? p.is_active : !p.is_active);
+
     const query = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !query ||
@@ -110,7 +120,7 @@ export default function ProductsPage() {
       p.name.toLowerCase().includes(query) ||
       currentDim.toLowerCase().includes(query);
 
-    return matchesDimension && matchesSearch;
+    return matchesDimension && matchesStatus && matchesSearch;
   });
 
   const handleAddSubmit = async (e: React.FormEvent) => {
@@ -207,6 +217,30 @@ export default function ProductsPage() {
       setEditFormError(msg);
     } finally {
       setIsSubmittingEdit(false);
+    }
+  };
+
+  const handleToggleProductStatus = async (productId: string, newActiveState: boolean) => {
+    setIsSubmittingDelete(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("products")
+        .update({
+          is_active: newActiveState,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", productId);
+
+      if (error) throw new Error(error.message);
+
+      setDeletingProduct(null);
+      await loadProducts();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal memperbarui status produk";
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmittingDelete(false);
     }
   };
 
@@ -385,6 +419,20 @@ export default function ProductsPage() {
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-md border border-slate-300 bg-white p-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label htmlFor="status-filter" className="text-sm font-bold text-slate-900">Status:</label>
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "active" | "archived" | "all")}
+            className="h-11 w-full sm:w-auto rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+          >
+            <option value="active">Aktif Saja</option>
+            <option value="archived">Diarsipkan (Terhapus)</option>
+            <option value="all">Semua Status</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <label htmlFor="dimension-filter" className="text-sm font-bold text-slate-900">Dimensi:</label>
           <select
             id="dimension-filter"
@@ -535,13 +583,33 @@ export default function ProductsPage() {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleStartEdit(p)}
-                        className="h-11 w-full rounded border-2 border-blue-900 bg-blue-900 text-sm font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                      >
-                        Ubah Stok, HPP & Harga Jual
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(p)}
+                          className="h-11 flex-1 rounded border-2 border-blue-900 bg-blue-900 text-sm font-bold text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                        >
+                          Ubah Data
+                        </button>
+                        {p.is_active ? (
+                          <button
+                            type="button"
+                            onClick={() => setDeletingProduct(p)}
+                            className="h-11 rounded border border-red-300 bg-white px-3 text-xs font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900"
+                          >
+                            Hapus
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProductStatus(p.id, true)}
+                            disabled={isSubmittingDelete}
+                            className="h-11 rounded border border-green-300 bg-white px-3 text-xs font-semibold text-green-700 hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 disabled:opacity-50"
+                          >
+                            Pulihkan
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -633,13 +701,35 @@ export default function ProductsPage() {
                               )}
                             </td>
                             <td className="sticky right-0 z-10 border-l border-slate-200 bg-white px-3 py-3 text-center whitespace-nowrap group-hover:bg-slate-50">
-                              <button
-                                type="button"
-                                onClick={() => handleStartEdit(p)}
-                                className="h-11 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-blue-900 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                              >
-                                Edit Data
-                              </button>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartEdit(p)}
+                                  className="h-10 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-blue-900 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                                >
+                                  Edit Data
+                                </button>
+                                {p.is_active ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingProduct(p)}
+                                    className="h-10 rounded border border-red-300 bg-white px-2.5 text-xs font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900"
+                                    title="Hapus Produk (Arsipkan)"
+                                  >
+                                    Hapus
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleProductStatus(p.id, true)}
+                                    disabled={isSubmittingDelete}
+                                    className="h-10 rounded border border-green-300 bg-white px-2.5 text-xs font-semibold text-green-700 hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 disabled:opacity-50"
+                                    title="Pulihkan Produk"
+                                  >
+                                    Pulihkan
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -812,23 +902,78 @@ export default function ProductsPage() {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setEditingProduct(null)}
-                  className="h-10 rounded border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingEdit}
-                  className="h-10 rounded bg-blue-900 px-4 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
-                >
-                  {isSubmittingEdit ? "Menyimpan..." : "Simpan Perubahan"}
-                </button>
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                <div>
+                  {editingProduct.is_active && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = editingProduct;
+                        setEditingProduct(null);
+                        setDeletingProduct(target);
+                      }}
+                      className="h-10 rounded border border-red-300 bg-white px-3 text-xs font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900"
+                    >
+                      Hapus Produk Ini
+                    </button>
+                  )}
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProduct(null)}
+                    className="h-10 rounded border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingEdit}
+                    className="h-10 rounded bg-blue-900 px-4 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+                  >
+                    {isSubmittingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Produk (Soft Delete) */}
+      {deletingProduct && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+        >
+          <div className="w-full max-w-md rounded-md border border-slate-300 bg-white p-6 shadow-md">
+            <h3 className="text-base font-bold text-slate-900">Konfirmasi Hapus Produk</h3>
+            <p className="mt-2 text-xs text-slate-700 leading-relaxed">
+              Apakah Anda yakin ingin menghapus produk <span className="font-bold text-slate-900">{deletingProduct.name}</span> (SKU: <span className="font-mono font-semibold">{deletingProduct.sku}</span>)?
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Produk akan diarsipkan sehingga tidak lagi muncul di Kasir POS maupun pencarian produk aktif. Riwayat transaksi lama tetap aman dan produk dapat dipulihkan kapan saja melalui filter status.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-3">
+              <button
+                type="button"
+                onClick={() => setDeletingProduct(null)}
+                disabled={isSubmittingDelete}
+                className="h-10 rounded border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleProductStatus(deletingProduct.id, false)}
+                disabled={isSubmittingDelete}
+                className="h-10 rounded bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900"
+              >
+                {isSubmittingDelete ? "Menghapus..." : "Ya, Hapus Produk"}
+              </button>
+            </div>
           </div>
         </div>
       )}
